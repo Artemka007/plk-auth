@@ -8,22 +8,24 @@
 
 namespace dao {
 
-using query = odb::query<models::User>;
-using result = odb::result<models::User>;
+using UserResult = odb::result<models::User>;
 
 UserDAO::UserDAO(std::shared_ptr<odb::database> db) 
     : database_(std::move(db)) {}
 
 std::shared_ptr<models::User> UserDAO::find_by_id(const std::string& id) {
     odb::transaction t(database_->begin());
+
     try {
-        result user = database_->query<models::User>(query::id == id);
-        t.commit();
-        return user;
-    } catch (const odb::object_not_persistent&) {
-        t.commit();
-        return nullptr;
-    }
+        typedef odb::query<models::User> query;
+        UserResult result = database_->query<models::User>(query::id == id);
+        if (result.begin() != result.end()) {
+            return std::make_shared<models::User>(*result.begin()); 
+        }
+    } catch (const odb::object_not_persistent&) {}
+
+    t.commit();
+    return nullptr;
 }
 
 std::shared_ptr<models::User> UserDAO::find_by_email(const std::string& email) {
@@ -31,31 +33,26 @@ std::shared_ptr<models::User> UserDAO::find_by_email(const std::string& email) {
     
     try {
         typedef odb::query<models::User> query;
-        auto result = database_->query<models::User>(query::email == email);
+        UserResult result = database_->query<models::User>(query::email == email);
         
-        if (result.empty()) {
+        if (!result.empty()) {
             t.commit();
-            return nullptr;
+            return std::make_shared<models::User>(*result.begin());
         }
-        
-        auto user = (*result.begin()).load();
-        t.commit();
-        return user;
-        
-    } catch (const std::exception& e) {
-        t.commit();
-        return nullptr;
-    }
+    } catch (const std::exception& e) {}
+
+    t.commit();
+    return nullptr;
 }
 
 std::vector<std::shared_ptr<models::User>> UserDAO::find_all() {
     odb::transaction t(database_->begin());
     
-    auto result = database_->query<models::User>();
+    UserResult result = database_->query<models::User>();
     std::vector<std::shared_ptr<models::User>> users;
     
     for (auto it = result.begin(); it != result.end(); ++it) {
-        users.push_back((*it).load());
+        users.push_back(std::make_shared<models::User>(*it));
     }
     
     t.commit();
@@ -64,23 +61,20 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_all() {
 
 std::vector<std::shared_ptr<models::User>> UserDAO::find_active_users() {
     odb::transaction t(database_->begin());
+    std::vector<std::shared_ptr<models::User>> users;
     
     try {
         typedef odb::query<models::User> query;
-        auto result = database_->query<models::User>(query::is_active == true);
+        UserResult result = database_->query<models::User>(query::is_active == true);
         
-        std::vector<std::shared_ptr<models::User>> users;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            users.push_back((*it).load());
+            users.push_back(std::make_shared<models::User>(*it));
         }
         
-        t.commit();
-        return users;
+    } catch (const std::exception& e) { }
         
-    } catch (const std::exception& e) {
-        t.commit();
-        return {};
-    }
+    t.commit();
+    return users;
 }
 
 bool UserDAO::save(const std::shared_ptr<models::User>& user) {
@@ -134,12 +128,12 @@ std::vector<std::shared_ptr<models::UserRole>> UserDAO::user_roles(
     
     try {
         typedef odb::query<models::UserRoleAssignment> query;
-        auto result = database_->query<models::UserRoleAssignment>(query::user == user);
+        odb::result<models::UserRoleAssignment> result = 
+            database_->query<models::UserRoleAssignment>(query::user == user->id());
         
         std::vector<std::shared_ptr<models::UserRole>> roles;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            auto assignment = (*it).load();
-            roles.push_back(assignment->role());
+            roles.push_back((*it).role());
         }
         
         t.commit();
@@ -161,7 +155,7 @@ bool UserDAO::assign_role(
         // Проверяем, нет ли уже такой роли
         typedef odb::query<models::UserRoleAssignment> query;
         auto existing = database_->query<models::UserRoleAssignment>(
-            query::user == user && query::role == role
+            query::user == user->id() && query::role == role->id()
         );
         
         if (existing.size() > 0) {
@@ -190,7 +184,7 @@ bool UserDAO::remove_role(
         
         typedef odb::query<models::UserRoleAssignment> query;
         database_->erase_query<models::UserRoleAssignment>(
-            query::user == user && query::role == role
+            query::user == user->id() && query::role == role->id()
         );
         
         t.commit();
@@ -253,13 +247,13 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_by_name(
     
     try {
         typedef odb::query<models::User> query;
-        auto result = database_->query<models::User>(
+        UserResult result = database_->query<models::User>(
             query::first_name == first_name && query::last_name == last_name
         );
         
         std::vector<std::shared_ptr<models::User>> users;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            users.push_back((*it).load());
+            users.push_back(std::make_shared<models::User>(*it));
         }
         
         t.commit();
@@ -276,13 +270,13 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_passwor
     
     try {
         typedef odb::query<models::User> query;
-        auto result = database_->query<models::User>(
+        UserResult result = database_->query<models::User>(
             query::password_change_required == true && query::is_active == true
         );
         
         std::vector<std::shared_ptr<models::User>> users;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            users.push_back((*it).load());
+            users.push_back(std::make_shared<models::User>(*it));
         }
         
         t.commit();
@@ -294,4 +288,4 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_passwor
     }
 }
 
-} // namespace dao
+}
