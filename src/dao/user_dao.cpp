@@ -288,4 +288,25 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_passwor
     }
 }
 
+std::shared_ptr<models::User> UserDAO::find_by_credentials(
+    const std::string& email, 
+    const std::string& password) {
+    
+    odb::transaction t(database_->begin());
+    
+    try {
+        typedef odb::query<models::User> query;
+        UserResult result = database_->query<models::User>(
+            query::email == email && query::password_hash == password
+        );
+        
+        if (result.begin() != result.end()) {
+            return std::make_shared<models::User>(*(result.begin()));
+        }
+    } catch (const std::exception& e) {}
+
+    t.commit();
+    return nullptr;
+}
+
 }
