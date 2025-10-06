@@ -4,16 +4,16 @@
 #include <odb\database.hxx>
 using namespace std;
 
-class MigrationInterface {
+class migration_interface {
 public:
-    virtual ~MigrationInterface() = default;
+    virtual ~migration_interface() = default;
     
-    virtual void createTables() = 0;
-    virtual void dropTables() = 0;
+    virtual void create_tables() = 0;
+    virtual void drop_tables() = 0;
     virtual void migrate() = 0;
-    virtual bool needsMigration() = 0;
+    virtual bool needs_migration() = 0;
     
-    static unique_ptr<MigrationInterface> create(odb::database& db);
+    static unique_ptr<migration_interface> create(odb::database& db);
 };
 
 
