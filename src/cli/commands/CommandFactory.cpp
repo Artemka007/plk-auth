@@ -1,14 +1,17 @@
-#include "CommandFactory.hpp"
-#include "commands/BaseCommand.hpp"
+#include "cli/commands/CommandFactory.hpp"
+#include "cli/commands/BaseCommand.hpp"
 
 // Include all commands
-#include "commands/ExitCommand.hpp"
-#include "commands/HelpCommand.hpp"
+#include "cli/commands/system/ExitCommand.hpp"
+#include "cli/commands/system/HelpCommand.hpp"
+#include "cli/commands/system/WhoAmICommand.hpp"
 
-std::vector<std::unique_ptr<BaseCommand>> CommandFactory::create_all_commands(
-    std::shared_ptr<AppState> app_state, std::shared_ptr<IOHandler> io_handler,
-    std::shared_ptr<AuthService> auth_service, std::shared_ptr<UserService> user_service,
-    std::shared_ptr<LogService> log_service) {
+std::vector<std::unique_ptr<BaseCommand>>
+CommandFactory::create_all_commands(std::shared_ptr<AppState> app_state,
+                                    std::shared_ptr<IOHandler> io_handler,
+                                    std::shared_ptr<AuthService> auth_service,
+                                    std::shared_ptr<UserService> user_service,
+                                    std::shared_ptr<LogService> log_service) {
     std::vector<std::unique_ptr<BaseCommand>> commands;
 
     // Create Help Command
@@ -21,6 +24,11 @@ std::vector<std::unique_ptr<BaseCommand>> CommandFactory::create_all_commands(
     commands.push_back(std::make_unique<ExitCommand>("exit", "Exit the application", app_state,
                                                      io_handler, auth_service, user_service,
                                                      log_service));
+
+    // Create WhoAmI Command
+    commands.push_back(std::make_unique<WhoAmICommand>(
+        "whoami", "Print short information about yourself", app_state, io_handler, auth_service,
+        user_service, log_service));
 
     std::unordered_map<std::string, BaseCommand *> command_map;
     for (const auto &cmd : commands) {

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "AppState.hpp"
-#include "IOHandler.hpp"
-#include "commands/BaseCommand.hpp"
+#include "cli/AppState.hpp"
+#include "cli/IOHandler.hpp"
+#include "cli/commands/BaseCommand.hpp"
 #include <memory>
 #include <optional>
 #include <string>
@@ -14,8 +14,10 @@ class LogService;
 
 class CliApp {
 public:
-    CliApp(std::shared_ptr<UserService> user_service, std::shared_ptr<AuthService> auth_service,
-           std::shared_ptr<LogService> log_service, std::shared_ptr<IOHandler> io_handler);
+    CliApp(std::shared_ptr<UserService> user_service,
+           std::shared_ptr<AuthService> auth_service,
+           std::shared_ptr<LogService> log_service,
+           std::shared_ptr<IOHandler> io_handler);
 
     void Run();
     void Stop();

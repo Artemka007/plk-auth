@@ -1,8 +1,8 @@
 #pragma once
 
-#include "IOHandler.hpp"
+#include "cli/IOHandler.hpp"
 
-class StandartIOHandler : public IOHandler {
+class StandardIOHandler : public IOHandler {
 public:
     std::string read_line(const std::string &prompt) override {
         if (!prompt.empty()) {
@@ -20,6 +20,8 @@ public:
     void println(const std::string &message) override { std::cout << message << '\n'; }
 
     void error(const std::string &message) override { std::cerr << "Error: " << message << '\n'; }
+
+    std::string read_password(const std::string &prompt) override;
 
     std::vector<std::string> split_command(const std::string &input) const override {
         if (input.empty()) {

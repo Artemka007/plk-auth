@@ -17,6 +17,8 @@ public:
 
     virtual void error(const std::string &message) = 0;
 
+    virtual std::string read_password(const std::string &prompt = "Password: ") = 0;
+
     virtual std::vector<std::string> split_command(const std::string &input) const = 0;
 
     virtual bool is_eof() const = 0;

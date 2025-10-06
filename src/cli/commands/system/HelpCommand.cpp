@@ -1,13 +1,19 @@
-#include "HelpCommand.hpp"
-#include "../IOHandler.hpp" ?
+#include "cli/commands/system/HelpCommand.hpp"
+#include "cli/IOHandler.hpp"
 
-HelpCommand::HelpCommand(std::string name, std::string description,
-                         std::shared_ptr<AppState> app_state, std::shared_ptr<IOHandler> io_handler,
+HelpCommand::HelpCommand(std::string name,
+                         std::string description,
+                         std::shared_ptr<AppState> app_state,
+                         std::shared_ptr<IOHandler> io_handler,
                          std::shared_ptr<AuthService> auth_service,
                          std::shared_ptr<UserService> user_service,
                          std::shared_ptr<LogService> log_service)
-    : BaseCommand(std::move(name), std::move(description), std::move(app_state),
-                  std::move(io_handler), std::move(auth_service), std::move(user_service),
+    : BaseCommand(std::move(name),
+                  std::move(description),
+                  std::move(app_state),
+                  std::move(io_handler),
+                  std::move(auth_service),
+                  std::move(user_service),
                   std::move(log_service)) {}
 
 bool HelpCommand::execute(const std::vector<std::string> &args) {

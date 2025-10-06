@@ -12,7 +12,8 @@ class LogService;
 
 class BaseCommand {
 public:
-    BaseCommand(std::string name, std::string description,
+    BaseCommand(std::string name,
+                std::string description,
                 std::shared_ptr<AppState> app_state,
                 std::shared_ptr<IOHandler> io_handler,
                 std::shared_ptr<AuthService> auth_service,
@@ -20,8 +21,7 @@ public:
                 std::shared_ptr<LogService> log_service)
         : name_(std::move(name)), description_(std::move(description)),
           app_state_(std::move(app_state)), io_handler_(std::move(io_handler)),
-          auth_service_(std::move(auth_service)),
-          user_service_(std::move(user_service)),
+          auth_service_(std::move(auth_service)), user_service_(std::move(user_service)),
           log_service_(std::move(log_service)) {}
 
     virtual ~BaseCommand() = default;

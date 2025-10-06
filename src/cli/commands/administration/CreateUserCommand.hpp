@@ -1,11 +1,11 @@
 #pragma once
 
-#include "BaseCommand.hpp"
+#include "cli/commands/BaseCommand.hpp"
 
-class ExitCommand : public BaseCommand {
+class CreateUserCommand : public BaseCommand {
 public:
     using BaseCommand::BaseCommand;
 
     bool execute(const std::vector<std::string> &args) override;
-    bool isVisible() const override { return true; }
+    bool isVisible() const override;
 };
