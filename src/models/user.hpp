@@ -5,18 +5,25 @@
 #include <odb/core.hxx>
 #include <odb/lazy-ptr.hxx>
 #include <odb/nullable.hxx>
-#include "user_role.hpp"
+
+#pragma db model version(1, 1)
 
 namespace models {
 
-#pragma db object table("users")
+#pragma db object table("app_user")
 class User {
 public:
-    User(const std::string& first_name, const std::string& last_name, const std::string& email)
-        : first_name_(first_name), last_name_(last_name), email_(email),
-          is_active_(true), password_change_required_(true) {
+    User() = default;
+    
+    User(std::string first_name, std::string last_name, std::string email)
+        : first_name_(std::move(first_name))
+        , last_name_(std::move(last_name))
+        , email_(std::move(email))
+        , is_active_(true)
+        , password_change_required_(true) {
     }
     
+    // Геттеры
     const std::string& id() const { return id_; }
     const std::string& first_name() const { return first_name_; }
     const std::string& last_name() const { return last_name_; }
@@ -25,15 +32,12 @@ public:
     const odb::nullable<std::string>& phone() const { return phone_; }
     const std::string& password_hash() const { return password_hash_; }
     bool is_active() const { return is_active_; }
-    bool password_change_required() const { return password_change_required_; }
+    bool is_password_change_required() const { return password_change_required_; }
+    const std::string& created_at() const { return created_at_; }
+    const std::string& updated_at() const { return updated_at_; }
+    const odb::nullable<std::string>& last_login_at() const { return last_login_at_; }
     
-    std::string full_name() const {
-        if (patronymic_.null()) {
-            return first_name_ + " " + last_name_;
-        }
-        return first_name_ + " " + patronymic_.get() + " " + last_name_;
-    }
-    
+    // Сеттеры
     void set_first_name(const std::string& name) { first_name_ = name; }
     void set_last_name(const std::string& name) { last_name_ = name; }
     void set_patronymic(const std::string& name) { patronymic_ = name; }
@@ -45,50 +49,20 @@ public:
     }
     void set_active(bool active) { is_active_ = active; }
     void require_password_change() { password_change_required_ = true; }
-    
-    void add_role(const odb::lazy_shared_ptr<UserRole>& role) {
-        roles_.push_back(role);
-    }
-    
-    void remove_role(const odb::lazy_shared_ptr<UserRole>& role) {
-        roles_.erase(
-            std::remove(roles_.begin(), roles_.end(), role),
-            roles_.end()
-        );
-    }
-    
-    bool has_role(const std::string& role_name) const {
-        for (const auto& role : roles_) {
-            if (role->name() == role_name) return true;
+    void set_last_login_at(const std::string& timestamp) { last_login_at_ = timestamp; }
+
+    // Вспомогательные методы
+    std::string full_name() const {
+        if (patronymic_.null()) {
+            return first_name_ + " " + last_name_;
         }
-        return false;
-    }
-    
-    const std::vector<odb::lazy_shared_ptr<UserRole>>& roles() const {
-        return roles_;
-    }
-    
-    bool has_permission(AccessPermission::Type permission) const {
-        for (const auto& role : roles_) {
-            if (role->has_permission(permission)) return true;
-        }
-        return false;
-    }
-    
-    bool can_manage_users() const {
-        return has_permission(AccessPermission::Type::USER_CREATE) ||
-               has_permission(AccessPermission::Type::USER_UPDATE) ||
-               has_permission(AccessPermission::Type::USER_DELETE);
-    }
-    
-    bool is_valid() const {
-        return !first_name_.empty() && !last_name_.empty() && !email_.empty();
+        return first_name_ + " " + patronymic_.get() + " " + last_name_;
     }
 
 private:
     friend class odb::access;
     
-    #pragma db id type("VARCHAR(36)") default("uuid_generate_v4()")
+    #pragma db id type("VARCHAR(36)")
     std::string id_;
     
     #pragma db type("VARCHAR(100)") not_null
@@ -109,13 +83,6 @@ private:
     #pragma db type("VARCHAR(255)") not_null
     std::string password_hash_;
     
-    #pragma db value_not_null
-    #pragma db unordered
-    #pragma db table("user_role_assignments")
-    #pragma db id column("user_id")
-    #pragma db inverse(user_)
-    std::vector<odb::lazy_shared_ptr<UserRole>> roles_;
-    
     #pragma db not_null
     bool is_active_;
     
@@ -132,11 +99,4 @@ private:
     odb::nullable<std::string> last_login_at_;
 };
 
-#pragma db view object(User)
-class UserCount {
-public:
-    #pragma db column("count(" + User::id_ + ")")
-    std::size_t count;
-};
-
-} 
+} // namespace models
