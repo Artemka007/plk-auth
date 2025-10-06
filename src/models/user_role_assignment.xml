@@ -1,0 +1,25 @@
+<changelog xmlns="http://www.codesynthesis.com/xmlns/odb/changelog" database="pgsql" version="1">
+  <model version="1">
+    <table name="user_role_assignment" kind="object">
+      <column name="id" type="BIGINT" null="false"/>
+      <column name="user_id" type="VARCHAR(36)" null="false"/>
+      <column name="role_id" type="VARCHAR(36)" null="false"/>
+      <column name="assigned_at" type="TIMESTAMP" null="false" default="'CURRENT_TIMESTAMP'"/>
+      <primary-key auto="true">
+        <column name="id"/>
+      </primary-key>
+      <foreign-key name="user_id_fk" deferrable="DEFERRED">
+        <column name="user_id"/>
+        <references table="app_user">
+          <column name="id"/>
+        </references>
+      </foreign-key>
+      <foreign-key name="role_id_fk" deferrable="DEFERRED">
+        <column name="role_id"/>
+        <references table="user_role">
+          <column name="id"/>
+        </references>
+      </foreign-key>
+    </table>
+  </model>
+</changelog>
