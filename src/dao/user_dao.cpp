@@ -2,9 +2,9 @@
 #include <odb/database.hxx>
 #include <odb/transaction.hxx>
 #include <odb/query.hxx>
-#include "../models/user.hpp"
-#include "../models/user_role.hpp"
-#include "../models/user_role_assignment.hpp"
+#include "../models/odb-2.5.0/user-odb.hpp"
+#include "../models/odb-2.5.0/user_role-odb.hpp"
+#include "../models/odb-2.5.0/user_role_assignment-odb.hpp"
 
 namespace dao {
 
