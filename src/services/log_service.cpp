@@ -1,6 +1,6 @@
-#include "LogService.h"
-#include "dao/LogDAO.h"
-#include "models/SystemLog.hpp"
+#include "services/log_service.hpp"
+#include "dao/log_dao.hpp"
+#include "models/system_log.hpp"
 #include <ctime>
 #include <iomanip>
 #include <sstream>

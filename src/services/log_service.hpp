@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/SystemLog.hpp"
+#include "models/system_log.hpp"
 #include <memory>
 #include <string>
 #include <vector>
