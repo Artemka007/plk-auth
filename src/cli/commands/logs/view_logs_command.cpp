@@ -4,14 +4,28 @@
 #include "services/log_service.hpp"
 
 bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
-    int limit = 10;
+    size_t logs_limit = 100;
 
     if (args.size() != 1) {
         io_handler_->error("Usage: view-logs [limit]");
         return false;
     }
 
-    // TODO: Make better logs receive
+    try {
+        int parsed = std::stoi(args[0]);
+        if (parsed <= 0) {
+            io_handler_->error("Limit must be positive");
+            return false;
+        }
+        limit = static_cast<size_t>(parsed);
+    } catch (const std::invalid_argument &) {
+        io_handler_->error("Limit must be a number");
+        return false;
+    } catch (const std::out_of_range &) {
+        io_handler_->error("Limit is too large");
+        return false;
+    }
+
     auto logs = log_service_->get_recent_logs(limit);
 
     if (logs.empty()) {
