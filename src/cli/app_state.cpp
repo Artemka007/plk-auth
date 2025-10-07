@@ -1,7 +1,7 @@
 #include "cli/app_state.hpp"
 #include "models/user.hpp"
 
-void AppState::set_current_user(const std::shared_ptr<const User> &user) { current_user_ = user; }
+void AppState::set_current_user(const std::shared_ptr<const models::User> &user) { current_user_ = user; }
 
 void AppState::set_running(bool running) { running_ = running; }
 
@@ -15,7 +15,7 @@ void AppState::add_to_history(std::string command) {
 
 std::vector<std::string> AppState::get_history() const { return history_; }
 
-std::shared_ptr<const User> AppState::get_current_user() const { return current_user_; }
+std::shared_ptr<const models::User> AppState::get_current_user() const { return current_user_; }
 
 bool AppState::is_authenticated() const { return current_user_ != nullptr; }
 
