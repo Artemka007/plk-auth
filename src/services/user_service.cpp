@@ -1,7 +1,7 @@
 #include "services/UserService.hpp"
 #include "user_dao.hpp"
 
-UserService::UserService(std::shared_ptr<UserDao> user_dao) 
+UserService::UserService(std::shared_ptr<dao::UserDao> user_dao) 
     : user_dao_(std::move(user_dao)) {}
 
 std::optional<models::User> UserService::find_by_email(const std::string& email) {
