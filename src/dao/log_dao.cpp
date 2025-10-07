@@ -6,6 +6,7 @@
 #include <iostream>
 #include "../models/enums.hpp"
 #include "../models/system_log.hpp"
+#include "../utils/uuid_generator.hpp"
 
 namespace dao {
 
@@ -16,7 +17,7 @@ LogDAO::LogDAO(std::shared_ptr<pqxx::connection> conn)
 bool LogDAO::save(const std::shared_ptr<models::SystemLog>& log) {
     try {
         if (log->id().empty()) {
-            log->set_id(generate_uuid());
+            log->set_id(utils::UUIDGenerator::generate_uuid());
         }
         
         pqxx::work txn(*connection_);
@@ -450,11 +451,6 @@ std::string LogDAO::time_point_to_sql(const std::chrono::system_clock::time_poin
     std::stringstream ss;
     ss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
     return ss.str();
-}
-
-// Вспомогательная функция для генерации UUID
-std::string generate_uuid() {
-    return "ss.str()";
 }
 
 } // namespace dao

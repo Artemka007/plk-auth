@@ -44,7 +44,6 @@ public:
     std::vector<std::shared_ptr<models::User>> find_users_requiring_password_change();
 
 private:
-    std::string generate_uuid();
     std::shared_ptr<models::User> user_from_row(const pqxx::row& row);
     std::shared_ptr<models::UserRole> role_from_row(const pqxx::row& row);
 };
