@@ -1,14 +1,8 @@
 #pragma once
 #include <string>
-#include <vector>
-#include <memory>
-#include <odb/core.hxx>
-#include <odb/lazy-ptr.hxx>
-#include "user_role.hpp"
 
 namespace models {
 
-#pragma db object table("access_permission")
 class AccessPermission {
 public:
     AccessPermission() = default;
@@ -23,51 +17,67 @@ public:
     const std::string& name() const { return name_; }
     const std::string& description() const { return description_; }
 
+    // Сеттеры
+    void set_id(const std::string& id) { id_ = id; }
+    void set_name(const std::string& name) { name_ = name; }
+    void set_description(const std::string& description) { description_ = description; }
+
+    // Сериализация для вставки
+    std::vector<std::string> get_insert_values() const {
+        return {id_, name_, description_};
+    }
+
+    // Десериализация из pqxx
+    void from_row(const pqxx::row& row) {
+        id_ = row["id"].as<std::string>();
+        name_ = row["name"].as<std::string>();
+        description_ = row["description"].as<std::string>();
+    }
+
 private:
-    friend class odb::access;
-    
-    #pragma db id type("VARCHAR(36)")
     std::string id_;
-    
-    #pragma db type("VARCHAR(50)") unique not_null
     std::string name_;
-    
-    #pragma db type("TEXT")
     std::string description_;
 };
 
-#pragma db object table("role_permission")
 class RolePermission {
 public:
     RolePermission() = default;
     
     RolePermission(
-        const std::shared_ptr<UserRole>& role_ptr,
-        const std::shared_ptr<AccessPermission>& permission_ptr)
-        : role_(role_ptr)
-        , permission_(permission_ptr) {
+        const std::string& role_id,
+        const std::string& permission_id)
+        : role_id_(role_id)
+        , permission_id_(permission_id) {
     }
     
     // Геттеры
-    const std::shared_ptr<UserRole>& role() const { return role_; }
-    const std::shared_ptr<AccessPermission>& permission() const { return permission_; }
+    const std::string& id() const { return id_; }
+    const std::string& role_id() const { return role_id_; }
+    const std::string& permission_id() const { return permission_id_; }
     const std::string& granted_at() const { return granted_at_; }
 
+    // Сеттеры
+    void set_role_id(const std::string& role_id) { role_id_ = role_id; }
+    void set_permission_id(const std::string& permission_id) { permission_id_ = permission_id; }
+
+    // Сериализация для вставки
+    std::vector<std::string> get_insert_values() const {
+        return {role_id_, permission_id_};
+    }
+
+    // Десериализация из pqxx
+    void from_row(const pqxx::row& row) {
+        id_ = row["id"].as<std::string>();
+        role_id_ = row["role_id"].as<std::string>();
+        permission_id_ = row["permission_id"].as<std::string>();
+        granted_at_ = row["granted_at"].as<std::string>();
+    }
+
 private:
-    friend class odb::access;
-    
-    #pragma db id auto
-    unsigned long id_;
-    
-    #pragma db not_null
-    #pragma db column("role_id")
-    std::shared_ptr<UserRole> role_;
-    
-    #pragma db not_null
-    #pragma db column("permission_id")
-    std::shared_ptr<AccessPermission> permission_;
-    
-    #pragma db type("TIMESTAMP") default("CURRENT_TIMESTAMP")
+    std::string id_;
+    std::string role_id_;
+    std::string permission_id_;
     std::string granted_at_;
 };
 

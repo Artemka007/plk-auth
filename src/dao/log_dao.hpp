@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <odb/database.hxx>
 #include <system_log.hpp>
 
 namespace dao {
@@ -37,7 +36,7 @@ struct LogQueryResult {
 
 class LogDAO {
 public:
-    explicit LogDAO(std::shared_ptr<odb::database> db);
+    explicit LogDAO(std::shared_ptr<pqxx::connection> conn);
     
     // операции с логами
     bool save(const std::shared_ptr<models::SystemLog>& log);
@@ -63,7 +62,7 @@ public:
     bool delete_logs_by_filter(const LogFilter& filter);
 
 private:
-    std::shared_ptr<odb::database> database_;
+    std::shared_ptr<pqxx::connection> connection_;
     
     std::string build_filter_condition(const LogFilter& filter);
     std::string time_point_to_sql(const std::chrono::system_clock::time_point& tp);

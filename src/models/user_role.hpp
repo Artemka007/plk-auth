@@ -1,14 +1,9 @@
 #pragma once
 #include <string>
-#include <vector>
-#include <memory>
-#include <odb/core.hxx>
-#include <odb/lazy-ptr.hxx>
-#include "enums.hpp"
+#include <pqxx/pqxx>
 
 namespace models {
 
-#pragma db object table("user_role")
 class UserRole {
 public:
     UserRole() = default;
@@ -28,29 +23,32 @@ public:
     const std::string& updated_at() const { return updated_at_; }
     
     // Сеттеры
+    void set_id(const std::string& id) { id_ = id; }
     void set_name(const std::string& name) { name_ = name; }
     void set_description(const std::string& description) { description_ = description; }
     void set_system(bool system) { is_system_ = system; }
 
+    // Сериализация для вставки
+    std::vector<std::string> get_insert_values() const {
+        return {id_, name_, description_, is_system_ ? "true" : "false"};
+    }
+
+    // Десериализация из pqxx
+    void from_row(const pqxx::row& row) {
+        id_ = row["id"].as<std::string>();
+        name_ = row["name"].as<std::string>();
+        description_ = row["description"].as<std::string>();
+        is_system_ = row["is_system"].as<bool>();
+        created_at_ = row["created_at"].as<std::string>();
+        updated_at_ = row["updated_at"].as<std::string>();
+    }
+
 private:
-    friend class odb::access;
-    
-    #pragma db id type("VARCHAR(36)")
     std::string id_;
-    
-    #pragma db type("VARCHAR(50)") unique not_null
     std::string name_;
-    
-    #pragma db type("TEXT")
     std::string description_;
-    
-    #pragma db not_null
     bool is_system_;
-    
-    #pragma db type("TIMESTAMP") default("CURRENT_TIMESTAMP")
     std::string created_at_;
-    
-    #pragma db type("TIMESTAMP") default("CURRENT_TIMESTAMP")
     std::string updated_at_;
 };
 
