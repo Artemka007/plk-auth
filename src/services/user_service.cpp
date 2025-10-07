@@ -1,5 +1,6 @@
-#include "services/UserService.hpp"
-#include "user_dao.hpp"
+#include "services/user_service.hpp"
+#include "dao/user_dao.hpp"
+#include "utils/password_utils.hpp"
 
 UserService::UserService(std::shared_ptr<dao::UserDao> user_dao)
     : user_dao_(std::move(user_dao)) {}
@@ -21,13 +22,27 @@ std::vector<models::User> UserService::get_all_users() {
     return result;
 }
 
-bool UserService::create_user(const std::string& first_name, const std::string& last_name, const std::string& email) {
+CreateUserResult UserService::create_user(const std::string& first_name, const std::string& last_name, const std::string& email) {
+    // If user with this email exists
     if (user_dao_->find_by_email(email) != nullptr) {
-        return false;
+        return {false, "User with this email already exists", nullptr, ""};
     }
 
     auto new_user = std::make_shared<models::User>(first_name, last_name, email);
-    return user_dao_->save(new_user);
+
+    // Generate random password
+    user_password = utils::PasswordUtils::generate_random_password(12);
+    std::string password_hash = utils::PasswordUtils::hash_password(user_password);
+
+    new_user->set_password_hash(password_hash);
+    new_user->require_password_change();
+
+    if (!user_dao_->save(user)) {
+        return {false, "Failed to save user to database", nullptr, ""};
+    }
+
+    // Success
+    return {true, "", user, generated_password_str};
 }
 
 bool UserService::delete_user(const std::string& email) {
@@ -62,7 +77,7 @@ bool UserService::is_admin(const std::shared_ptr<models::User>& user) const {
         return false;
     }
 
-    return user_dao_->has_role(user, "admin");
+    return user_dao_->has_role(user, "ADMIN");
 }
 
 bool UserService::can_manage_users(const std::shared_ptr<models::User>& user) const {
@@ -70,8 +85,8 @@ bool UserService::can_manage_users(const std::shared_ptr<models::User>& user) co
         return false;
     }
 
-    return user_dao_->has_role(user, "admin") ||
-           user_dao_->has_role(user, "user_manager");
+    return user_dao_->has_role(user, "ADMIN") ||
+           user_dao_->has_role(user, "USER_MANAGER");
 }
 
 bool UserService::has_role(const std::shared_ptr<models::User>& user, const std::string &role_name) const {

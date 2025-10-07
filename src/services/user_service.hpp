@@ -5,10 +5,18 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <string>
 
 namespace dao {
     class UserDao;
 }
+
+struct CreateUserResult {
+    bool success = false;
+    std::string message = "";
+    std::shared_ptr<models::User> user = nullptr;
+    std::string generated_password = "";
+};
 
 class UserService {
 public:
@@ -16,7 +24,7 @@ public:
 
     std::optional<models::User> find_by_email(const std::string &email);
     std::vector<models::User> get_all_users();
-    bool create_user(const std::string &first_name, const std::string &last_name, const std::string &email);
+    CreateUserResult create_user(const std::string &first_name, const std::string &last_name, const std::string &email);
     bool delete_user(const std::string &email);
     bool add_role_to_user(const std::string &email, const models::UserRole role);
     bool remove_role_from_user(const std::string &email, const models::UserRole role);
