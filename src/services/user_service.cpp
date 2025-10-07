@@ -37,8 +37,10 @@ CreateUserResult UserService::create_user(const std::string &first_name,
         std::make_shared<models::User>(first_name, last_name, email);
 
     // Generate random password
-    std::string user_password = utils::PasswordUtils::generate_random_password(12);
-    std::string password_hash = utils::PasswordUtils::hash_password(user_password);
+    std::string user_password =
+        utils::PasswordUtils::generate_random_password(12);
+    std::string password_hash =
+        utils::PasswordUtils::hash_password(user_password);
 
     new_user->set_password_hash(password_hash);
     new_user->require_password_change();
@@ -97,7 +99,8 @@ bool UserService::can_manage_users(std::shared_ptr<const models::User> &user) co
            user_dao_->has_role(user, "USER_MANAGER");
 }
 
-bool UserService::has_role(std::shared_ptr<const models::User> &user, const std::string &role_name) const {
+bool UserService::has_role(std::shared_ptr<const models::User> &user,
+                           const std::string &role_name) const {
     if (!user || role_name.empty()) {
         return false;
     }
@@ -105,14 +108,16 @@ bool UserService::has_role(std::shared_ptr<const models::User> &user, const std:
     return user_dao_->has_role(user, role_name);
 }
 
-bool UserService::requires_password_change(std::shared_ptr<const models::User> &user) const {
+bool UserService::requires_password_change(
+    std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }
     return user->password_change_required();
 }
 
-bool UserService::is_user_active(std::shared_ptr<const models::User> &user) const {
+bool UserService::is_user_active(
+    std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }

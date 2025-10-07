@@ -48,5 +48,5 @@ bool DeleteUserCommand::execute(const std::vector<std::string> &args) {
 
 bool DeleteUserCommand::isVisible() const {
     auto current_user = app_state_->get_current_user();
-    return current_user && current_user->can_manage_users();
+    return current_user && user_service_->can_manage_users(current_user);
 }

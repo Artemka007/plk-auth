@@ -1,10 +1,12 @@
 #pragma once
 
 #include "src/models/system_log.hpp"
+#include "src/models/user.hpp"
 #include "src/models/enums.hpp"
 #include <memory>
 #include <string>
 #include <vector>
+#include <chrono>
 
 namespace dao {
     class LogDAO;
@@ -15,34 +17,34 @@ public:
     explicit LogService(std::shared_ptr<dao::LogDAO> log_dao);
 
     void log(models::LogLevel level, models::ActionType action_type, const std::string &message,
-             const std::shared_ptr<models::User> &actor = nullptr,
-             const std::shared_ptr<models::User> &subject = nullptr,
+             const std::shared_ptr<const models::User> &actor = nullptr,
+             const std::shared_ptr<const models::User> &subject = nullptr,
              const std::string &ip_address = "",
              const std::string &user_agent = "");
 
     void debug(models::ActionType action_type, const std::string &message,
-               const std::shared_ptr<models::User> &actor = nullptr,
-               const std::shared_ptr<models::User> &subject = nullptr,
+               const std::shared_ptr<const models::User> &actor = nullptr,
+               const std::shared_ptr<const models::User> &subject = nullptr,
                const std::string &ip_address = "",
                const std::string &user_agent = "");
     void info(models::ActionType action_type, const std::string &message,
-              const std::shared_ptr<models::User> &actor = nullptr,
-              const std::shared_ptr<models::User> &subject = nullptr,
+              const std::shared_ptr<const models::User> &actor = nullptr,
+              const std::shared_ptr<const models::User> &subject = nullptr,
               const std::string &ip_address = "",
               const std::string &user_agent = "");
     void warning(models::ActionType action_type, const std::string &message,
-                 const std::shared_ptr<models::User> &actor = nullptr,
-                 const std::shared_ptr<models::User> &subject = nullptr,
+                 const std::shared_ptr<const models::User> &actor = nullptr,
+                 const std::shared_ptr<const models::User> &subject = nullptr,
                  const std::string &ip_address = "",
                  const std::string &user_agent = "");
     void error(models::ActionType action_type, const std::string &message,
-               const std::shared_ptr<models::User> &actor = nullptr,
-               const std::shared_ptr<models::User> &subject = nullptr,
+               const std::shared_ptr<const models::User> &actor = nullptr,
+               const std::shared_ptr<const models::User> &subject = nullptr,
                const std::string &ip_address = "",
                const std::string &user_agent = "");
     void critical(models::ActionType action_type, const std::string &message,
-                  const std::shared_ptr<models::User> &actor = nullptr,
-                  const std::shared_ptr<models::User> &subject = nullptr,
+                  const std::shared_ptr<const models::User> &actor = nullptr,
+                  const std::shared_ptr<const models::User> &subject = nullptr,
                   const std::string &ip_address = "",
                   const std::string &user_agent = "");
 
@@ -78,8 +80,8 @@ private:
 
     std::shared_ptr<models::SystemLog> create_log_entry(
         models::LogLevel level, models::ActionType action_type, const std::string &message,
-        const std::shared_ptr<models::User> &actor,
-        const std::shared_ptr<models::User> &subject,
+        const std::shared_ptr<const models::User> &actor,
+        const std::shared_ptr<const models::User> &subject,
         const std::string &ip_address, const std::string &user_agent);
 
     std::chrono::system_clock::time_point

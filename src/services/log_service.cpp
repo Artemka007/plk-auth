@@ -1,6 +1,8 @@
 #include "log_service.hpp"
 #include "src/cli_app.hpp"
+#include "src/models/enums.hpp"
 #include "src/models/system_log.hpp"
+#include "src/dao/log_dao.hpp"
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -9,21 +11,24 @@
 LogService::LogService(std::shared_ptr<dao::LogDAO> log_dao)
     : log_dao_(std::move(log_dao)) {}
 
-void LogService::log(LogLevel level, ActionType action_type,
+void LogService::log(models::LogLevel level, models::ActionType action_type,
                      const std::string &message,
-                     const std::shared_ptr<models::User> &actor,
-                     const std::shared_ptr<models::User> &subject,
+                     const std::shared_ptr<const models::User> &actor,
+                     const std::shared_ptr<const models::User> &subject,
                      const std::string &ip_address,
                      const std::string &user_agent) {
-    std::shared_ptr<models::SystemLog> entry = create_log_entry(
-        level, action_type, message, actor, subject, ip_address, user_agent);
+    auto entry = create_log_entry(level, action_type, message, actor, subject,
+                                  ip_address, user_agent);
     log_dao_->save(entry);
 }
 
 std::shared_ptr<models::SystemLog> LogService::create_log_entry(
-    LogLevel level, ActionType action_type, const std::string &message,
-    const std::shared_ptr<models::User> &actor,
-    const std::shared_ptr<models::User> &subject, const std::string &ip_address,
+    models::LogLevel level,
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
     const std::string &user_agent) {
 
     std::shared_ptr<models::SystemLog> entry =
@@ -45,49 +50,59 @@ std::shared_ptr<models::SystemLog> LogService::create_log_entry(
     return entry;
 }
 
-void LogService::debug(ActionType action_type, const std::string &message,
-                       const std::shared_ptr<models::User> &actor,
-                       const std::shared_ptr<models::User> &subject,
-                       const std::string &ip_address,
-                       const std::string &user_agent) {
-    log(LogLevel::DEBUG, action_type, message, actor, subject, ip_address,
-        user_agent);
+void LogService::debug(
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
+    const std::string &user_agent) {
+    log(models::LogLevel::DEBUG, action_type, message, actor, subject,
+        ip_address, user_agent);
 }
 
-void LogService::info(ActionType action_type, const std::string &message,
-                      const std::shared_ptr<models::User> &actor,
-                      const std::shared_ptr<models::User> &subject,
-                      const std::string &ip_address,
-                      const std::string &user_agent) {
-    log(LogLevel::INFO, action_type, message, actor, subject, ip_address,
-        user_agent);
+void LogService::info(
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
+    const std::string &user_agent) {
+    log(models::LogLevel::INFO, action_type, message, actor, subject,
+        ip_address, user_agent);
 }
 
-void LogService::warning(ActionType action_type, const std::string &message,
-                         const std::shared_ptr<models::User> &actor,
-                         const std::shared_ptr<models::User> &subject,
-                         const std::string &ip_address,
-                         const std::string &user_agent) {
-    log(LogLevel::WARNING, action_type, message, actor, subject, ip_address,
-        user_agent);
+void LogService::warning(
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
+    const std::string &user_agent) {
+    log(models::LogLevel::WARNING, action_type, message, actor, subject,
+        ip_address, user_agent);
 }
 
-void LogService::error(ActionType action_type, const std::string &message,
-                       const std::shared_ptr<models::User> &actor,
-                       const std::shared_ptr<models::User> &subject,
-                       const std::string &ip_address,
-                       const std::string &user_agent) {
-    log(LogLevel::ERROR, action_type, message, actor, subject, ip_address,
-        user_agent);
+void LogService::error(
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
+    const std::string &user_agent) {
+    log(models::LogLevel::ERROR, action_type, message, actor, subject,
+        ip_address, user_agent);
 }
 
-void LogService::critical(ActionType action_type, const std::string &message,
-                          const std::shared_ptr<models::User> &actor,
-                          const std::shared_ptr<models::User> &subject,
-                          const std::string &ip_address,
-                          const std::string &user_agent) {
-    log(LogLevel::CRITICAL, action_type, message, actor, subject, ip_address,
-        user_agent);
+void LogService::critical(
+    models::ActionType action_type,
+    const std::string &message,
+    const std::shared_ptr<const models::User> &actor,
+    const std::shared_ptr<const models::User> &subject,
+    const std::string &ip_address,
+    const std::string &user_agent) {
+    log(models::LogLevel::CRITICAL, action_type, message, actor, subject,
+        ip_address, user_agent);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
@@ -96,12 +111,12 @@ LogService::get_recent_logs(size_t limit) {
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_level(LogLevel level, size_t limit) {
+LogService::get_logs_by_level(models::LogLevel level, size_t limit) {
     return log_dao_->find_by_level(level, limit);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_action(ActionType action_type, size_t limit) {
+LogService::get_logs_by_action(models::ActionType action_type, size_t limit) {
     return log_dao_->find_by_action_type(action_type, limit);
 }
 
@@ -130,14 +145,6 @@ LogService::get_logs_by_date_range(const std::string &start_date,
     return get_logs_by_time_range(start_tp, end_tp, limit);
 }
 
-// TODO: Optionally implement search by time range in LogDAO
-// std::vector<std::shared_ptr<models::SystemLog>>
-// LogService::get_logs_by_date_range(const std::string &start_date,
-//                                    const std::string &end_date, size_t limit)
-//                                    {
-//     return log_dao_->find_by_date_range(start_date, end_date, limit);
-// }
-
 bool LogService::cleanup_old_logs(int days_to_keep) {
     std::chrono::time_point now = std::chrono::system_clock::now();
     std::chrono::time_point days_to_substract =
@@ -147,7 +154,8 @@ bool LogService::cleanup_old_logs(int days_to_keep) {
     return log_dao_->cleanup_old_logs(cutoff_time);
 }
 
-bool LogService::delete_logs(const std::vector<std::shared_ptr<models::SystemLog>> &logs) {
+bool LogService::delete_logs(
+    const std::vector<std::shared_ptr<models::SystemLog>> &logs) {
     bool all_deleted = true;
     for (auto &log : logs) {
         if (!log_dao_->remove(log)) {
@@ -172,5 +180,3 @@ LogService::sql_string_to_time_point(const std::string &sql_time) const {
     std::time_t time_t_val = std::mktime(&tm);
     return std::chrono::system_clock::from_time_t(time_t_val);
 }
-
-} // namespace services

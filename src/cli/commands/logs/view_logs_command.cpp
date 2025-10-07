@@ -3,6 +3,7 @@
 #include "src/cli/io_handler.hpp"
 #include "src/services/log_service.hpp"
 #include "src/services/user_service.hpp"
+#include "src/models/system_log.hpp"
 
 bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     size_t logs_limit = 100;
