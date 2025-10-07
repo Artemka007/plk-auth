@@ -1,10 +1,10 @@
-#include "cli/commands/CommandFactory.hpp"
-#include "cli/commands/BaseCommand.hpp"
+#include "cli/commands/command_factory.hpp"
+#include "cli/commands/base_command.hpp"
 
 // Include all commands
-#include "cli/commands/system/ExitCommand.hpp"
-#include "cli/commands/system/HelpCommand.hpp"
-#include "cli/commands/system/WhoAmICommand.hpp"
+#include "cli/commands/system/exit_command.hpp"
+#include "cli/commands/system/help_command.hpp"
+#include "cli/commands/system/whoami_command.hpp"
 
 std::vector<std::unique_ptr<BaseCommand>>
 CommandFactory::create_all_commands(std::shared_ptr<AppState> app_state,

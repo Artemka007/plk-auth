@@ -18,6 +18,7 @@ public:
     // CRUD операции
     std::shared_ptr<models::User> find_by_id(const std::string& id);
     std::shared_ptr<models::User> find_by_email(const std::string& email);
+    std::shared_ptr<models::User> find_by_credentials(const std::string& email, const std::string& password);
     std::vector<std::shared_ptr<models::User>> find_all();
     std::vector<std::shared_ptr<models::User>> find_active_users();
     bool save(const std::shared_ptr<models::User>& user);

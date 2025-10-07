@@ -1,5 +1,5 @@
-#include "cli/commands/system/HelpCommand.hpp"
-#include "cli/IOHandler.hpp"
+#include "cli/commands/system/help_command.hpp"
+#include "cli/io_handler.hpp"
 
 HelpCommand::HelpCommand(std::string name,
                          std::string description,

@@ -1,5 +1,5 @@
-#include "cli/commands/system/WhoAmICommand.hpp"
-#include "cli/AppState.hpp"
+#include "cli/commands/system/whoami_command.hpp"
+#include "cli/app_state.hpp"
 
 bool WhoAmICommandCommand::execute(const std::vector<std::string> &args) {
     if (!args.empty()) {

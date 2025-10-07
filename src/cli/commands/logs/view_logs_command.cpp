@@ -1,7 +1,7 @@
-#include "cli/commands/logs/ViewLogsCommand.hpp"
-#include "cli/AppState.hpp"
-#include "cli/IOHandler.hpp"
-#include "services/LogService.hpp"
+#include "cli/commands/logs/view_logs_command.hpp"
+#include "cli/app_state.hpp"
+#include "cli/io_handler.hpp"
+#include "services/log_service.hpp"
 
 bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     int limit = 10;
@@ -24,8 +24,8 @@ bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     io_handler_->println("----------");
 
     for (const auto &log_entry : logs) {
-        io_handler_->println("[" + log_entry.timestamp + "] [" + log_entry.level + "] " +
-                             log_entry.message);
+        io_handler_->println("[" + log_entry.timestamp + "] [" +
+                             log_entry.level + "] " + log_entry.message);
     }
 
     return true;

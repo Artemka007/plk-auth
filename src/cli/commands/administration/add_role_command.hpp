@@ -1,8 +1,8 @@
 #pragma once
 
-#include "cli/commands/BaseCommand.hpp"
+#include "cli/commands/base_command.hpp"
 
-class LogoutCommand : public BaseCommand {
+class AddRoleCommand : public BaseCommand {
 public:
     using BaseCommand::BaseCommand;
 
