@@ -1,6 +1,6 @@
-#include "cli/commands/system/ExitCommand.hpp"
-#include "cli/AppState.hpp"
-#include "cli/IOHandler.hpp"
+#include "cli/commands/system/exit_command.hpp"
+#include "cli/app_state.hpp"
+#include "cli/io_handler.hpp"
 
 bool ExitCommand::execute(const std::vector<std::string> &args) {
     if (!args.empty()) {
