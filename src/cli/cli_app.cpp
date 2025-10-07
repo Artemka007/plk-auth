@@ -1,5 +1,6 @@
-#include "cli/cli_app.hpp"
-#include "cli/commands/command_factory.hpp"
+#include "cli_app.hpp"
+#include "commands/command_factory.hpp"
+#include "src/models/user.hpp"
 
 CliApp::CliApp(std::shared_ptr<UserService> user_service,
                std::shared_ptr<AuthService> auth_service,
@@ -7,8 +8,7 @@ CliApp::CliApp(std::shared_ptr<UserService> user_service,
                std::shared_ptr<IOHandler> io_handler)
     : user_service_(std::move(user_service)),
       auth_service_(std::move(auth_service)),
-      log_service_(std::move(log_service)),
-      io_handler_(std::move(io_handler)),
+      log_service_(std::move(log_service)), io_handler_(std::move(io_handler)),
       app_state_(std::make_shared<AppState>()) {
     initialize_commands();
 }
@@ -74,5 +74,4 @@ void CliApp::execute_command(const std::string &input) {
     cmd->execute(args);
 }
 
-void CliApp::Stop() {
-    app_state_->set_running(false);
+void CliApp::Stop() { app_state_->set_running(false); }

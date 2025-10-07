@@ -1,7 +1,8 @@
-#include "cli/commands/administration/create_user_command.hpp"
-#include "cli/io_handler.hpp"
-#include "cli/app_state.hpp"
-#include "services/user_service.hpp"
+#include "create_user_command.hpp"
+#include "src/cli/io_handler.hpp"
+#include "src/cli/app_state.hpp"
+#include "src/services/user_service.hpp"
+#include "src/models/enums.hpp"
 
 bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     if (args.size() != 3) {
@@ -23,7 +24,7 @@ bool CreateUserCommand::execute(const std::vector<std::string> &args) {
 
     auto current_user = app_state_->get_current_user();
     log_service_->info(
-        ActionType::USER_CREATED,
+        models::ActionType::USER_CREATED,
         "User created successfully: " + email,
         current_user,
         result.user

@@ -1,7 +1,8 @@
-#include "cli/commands/system/whoami_command.hpp"
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "models/user.hpp"
+#include "whoami_command.hpp"
+#include "src/cli/app_state.hpp"
+#include "src/cli/io_handler.hpp"
+#include "src/models/user.hpp"
+#include "src/services/user_service.hpp"
 
 bool WhoAmICommand::execute(const std::vector<std::string> &args) {
     if (!args.empty()) {

@@ -1,6 +1,6 @@
-#include "services/log_service.hpp"
-#include "dao/log_dao.hpp"
-#include "models/system_log.hpp"
+#include "log_service.hpp"
+#include "src/cli_app.hpp"
+#include "src/models/system_log.hpp"
 #include <chrono>
 #include <ctime>
 #include <iomanip>

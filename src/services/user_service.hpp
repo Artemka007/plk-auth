@@ -1,14 +1,14 @@
 #pragma once
 
-#include "models/user.hpp"
-#include "models/user_role.hpp"
+#include "src/models/user.hpp"
+#include "src/models/user_role.hpp"
 #include <memory>
 #include <optional>
 #include <vector>
 #include <string>
 
 namespace dao {
-    class UserDao;
+    class UserDAO;
 }
 
 struct CreateUserResult {
@@ -20,7 +20,7 @@ struct CreateUserResult {
 
 class UserService {
 public:
-    explicit UserService(std::shared_ptr<dao::UserDao> user_dao);
+    explicit UserService(std::shared_ptr<dao::UserDAO> user_dao);
 
     std::optional<models::User> find_by_email(const std::string &email);
     std::vector<models::User> get_all_users();
@@ -36,4 +36,5 @@ public:
     std::vector<std::shared_ptr<models::UserRole>> user_roles(const std::shared_ptr<models::User> &user) const;
 
 private:
-    std::shared_ptr<dao::UserDao> user_dao_;
+    std::shared_ptr<dao::UserDAO> user_dao_;
+};

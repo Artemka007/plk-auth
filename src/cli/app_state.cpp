@@ -1,5 +1,5 @@
-#include "cli/app_state.hpp"
-#include "models/user.hpp"
+#include "app_state.hpp"
+#include "src/models/user.hpp"
 
 void AppState::set_current_user(const std::shared_ptr<const models::User> &user) { current_user_ = user; }
 
@@ -20,7 +20,3 @@ std::shared_ptr<const models::User> AppState::get_current_user() const { return 
 bool AppState::is_authenticated() const { return current_user_ != nullptr; }
 
 bool AppState::is_running() const { return running_; }
-
-bool AppState::is_admin() const {
-    return current_user_ != nullptr && current_user_->can_manage_users();
-}

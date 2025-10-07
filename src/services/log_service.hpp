@@ -1,6 +1,7 @@
 #pragma once
 
-#include "models/system_log.hpp"
+#include "src/models/system_log.hpp"
+#include "src/models/enums.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -13,33 +14,33 @@ class LogService {
 public:
     explicit LogService(std::shared_ptr<dao::LogDAO> log_dao);
 
-    void log(LogLevel level, ActionType action_type, const std::string &message,
+    void log(models::LogLevel level, models::ActionType action_type, const std::string &message,
              const std::shared_ptr<models::User> &actor = nullptr,
              const std::shared_ptr<models::User> &subject = nullptr,
              const std::string &ip_address = "",
              const std::string &user_agent = "");
 
-    void debug(ActionType action_type, const std::string &message,
+    void debug(models::ActionType action_type, const std::string &message,
                const std::shared_ptr<models::User> &actor = nullptr,
                const std::shared_ptr<models::User> &subject = nullptr,
                const std::string &ip_address = "",
                const std::string &user_agent = "");
-    void info(ActionType action_type, const std::string &message,
+    void info(models::ActionType action_type, const std::string &message,
               const std::shared_ptr<models::User> &actor = nullptr,
               const std::shared_ptr<models::User> &subject = nullptr,
               const std::string &ip_address = "",
               const std::string &user_agent = "");
-    void warning(ActionType action_type, const std::string &message,
+    void warning(models::ActionType action_type, const std::string &message,
                  const std::shared_ptr<models::User> &actor = nullptr,
                  const std::shared_ptr<models::User> &subject = nullptr,
                  const std::string &ip_address = "",
                  const std::string &user_agent = "");
-    void error(ActionType action_type, const std::string &message,
+    void error(models::ActionType action_type, const std::string &message,
                const std::shared_ptr<models::User> &actor = nullptr,
                const std::shared_ptr<models::User> &subject = nullptr,
                const std::string &ip_address = "",
                const std::string &user_agent = "");
-    void critical(ActionType action_type, const std::string &message,
+    void critical(models::ActionType action_type, const std::string &message,
                   const std::shared_ptr<models::User> &actor = nullptr,
                   const std::shared_ptr<models::User> &subject = nullptr,
                   const std::string &ip_address = "",
@@ -50,10 +51,10 @@ public:
     get_recent_logs(size_t limit = 100);
 
     std::vector<std::shared_ptr<models::SystemLog>>
-    get_logs_by_level(LogLevel level, size_t limit = 100);
+    get_logs_by_level(models::LogLevel level, size_t limit = 100);
 
     std::vector<std::shared_ptr<models::SystemLog>>
-    get_logs_by_action(ActionType action_type, size_t limit = 100);
+    get_logs_by_action(models::ActionType action_type, size_t limit = 100);
 
     std::vector<std::shared_ptr<models::SystemLog>>
     get_logs_by_actor_id(const std::string &actor_id, size_t limit = 100);
@@ -76,7 +77,7 @@ private:
     std::shared_ptr<dao::LogDAO> log_dao_;
 
     std::shared_ptr<models::SystemLog> create_log_entry(
-        LogLevel level, ActionType action_type, const std::string &message,
+        models::LogLevel level, models::ActionType action_type, const std::string &message,
         const std::shared_ptr<models::User> &actor,
         const std::shared_ptr<models::User> &subject,
         const std::string &ip_address, const std::string &user_agent);
@@ -84,4 +85,3 @@ private:
     std::chrono::system_clock::time_point
     sql_string_to_time_point(const std::string &sql_time) const;
 };
-}

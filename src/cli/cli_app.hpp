@@ -1,8 +1,8 @@
 #pragma once
 
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "cli/commands/base_command.hpp"
+#include "app_state.hpp"
+#include "io_handler.hpp"
+#include "commands/base_command.hpp"
 #include <memory>
 #include <optional>
 #include <string>

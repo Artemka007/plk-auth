@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cli/io_handler.hpp"
+#include "io_handler.hpp"
 
 class StandardIOHandler : public IOHandler {
 public:

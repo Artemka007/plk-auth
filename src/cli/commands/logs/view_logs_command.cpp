@@ -1,7 +1,8 @@
-#include "cli/commands/logs/view_logs_command.hpp"
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "services/log_service.hpp"
+#include "view_logs_command.hpp"
+#include "src/cli/app_state.hpp"
+#include "src/cli/io_handler.hpp"
+#include "src/services/log_service.hpp"
+#include "src/services/user_service.hpp"
 
 bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     size_t logs_limit = 100;
@@ -17,7 +18,7 @@ bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
             io_handler_->error("Limit must be positive");
             return false;
         }
-        limit = static_cast<size_t>(parsed);
+        logs_limit = static_cast<size_t>(parsed);
     } catch (const std::invalid_argument &) {
         io_handler_->error("Limit must be a number");
         return false;
@@ -26,7 +27,7 @@ bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
         return false;
     }
 
-    auto logs = log_service_->get_recent_logs(limit);
+    auto logs = log_service_->get_recent_logs(logs_limit);
 
     if (logs.empty()) {
         io_handler_->println("No logs found");
@@ -47,5 +48,5 @@ bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
 
 bool ViewLogsCommand::isVisible() const {
     auto current_user = app_state_->get_current_user();
-    return current_user && current_user->has_role("admin");
+    return current_user && user_service_->has_role(current_user, "ADMIN");
 }

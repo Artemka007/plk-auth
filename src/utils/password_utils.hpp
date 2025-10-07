@@ -11,6 +11,7 @@ namespace utils {
 
 class PasswordUtils {
 public:
+    // TODO: Check OpenSSL deprecated method
     std::string hash_password(const std::string &password) {
         unsigned char hash[SHA256_DIGEST_LENGTH];
         SHA256_CTX ctx;

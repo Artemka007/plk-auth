@@ -1,7 +1,7 @@
 #pragma once
 
-#include "models/user.hpp"
-#include "models/user_role.hpp"
+#include "src/models/user.hpp"
+#include "src/models/user_role.hpp"
 #include <memory>
 #include <string>
 

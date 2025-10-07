@@ -1,7 +1,7 @@
-#include "services/auth_service.hpp"
-#include "dao/user_dao.hpp"
-#include "models/user_role.hpp"
-#include "utils/PasswordUtils.hpp"
+#include "auth_service.hpp"
+#include "src/dao/user_dao.hpp"
+#include "src/models/user_role.hpp"
+#include "src/utils/password_utils.hpp"
 #include <string>
 
 LoginResult AuthService::login(const std::string &email,

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cli/commands/base_command.hpp"
+#include "../base_command.hpp"
 
 class RemoveRoleCommand : public BaseCommand {
 public:

@@ -1,8 +1,9 @@
-#include "cli/commands/auth/logout_command.hpp"
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "services/auth_service.hpp"
-#include "services/log_service.hpp"
+#include "logout_command.hpp"
+#include "src/cli/app_state.hpp"
+#include "src/cli/io_handler.hpp"
+#include "src/services/auth_service.hpp"
+#include "src/services/log_service.hpp"
+#include "src/models/enums.hpp"
 
 bool LogoutCommand::execute(const std::vector<std::string> &args) {
     if (!args.empty()) {
@@ -23,7 +24,7 @@ bool LogoutCommand::execute(const std::vector<std::string> &args) {
 
     if (confirmation == "y" || confirmation == "Y" || confirmation == "yes") {
         log_service_->info(
-            ActionType::SYSTEM_LOGOUT,
+            models::ActionType::SYSTEM_LOGOUT,
             "User logged out",
             user,
             user
