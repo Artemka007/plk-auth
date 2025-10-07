@@ -2,18 +2,23 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <system_log.hpp>
+#include <chrono>
+#include <pqxx/pqxx>
+#include "../models/system_log.hpp"
+#include "../models/enums.hpp"
+#include <iostream>
 
 namespace dao {
+
 struct LogFilter {
-    LogLevel level;
-    ActionType action_type;
+    models::LogLevel level{};
+    models::ActionType action_type{};
     std::string actor_id;
     std::string subject_id;
     std::string message_pattern;
     std::string ip_address;
-    std::chrono::system_clock::time_point start_time;
-    std::chrono::system_clock::time_point end_time;
+    std::chrono::system_clock::time_point start_time{};
+    std::chrono::system_clock::time_point end_time{};
     
     bool has_time_range() const {
         return start_time != std::chrono::system_clock::time_point{} &&
@@ -30,8 +35,8 @@ struct Pagination {
 
 struct LogQueryResult {
     std::vector<std::shared_ptr<models::SystemLog>> logs;
-    size_t total_count;
-    size_t total_pages;
+    size_t total_count = 0;
+    size_t total_pages = 0;
 };
 
 class LogDAO {
@@ -46,16 +51,16 @@ public:
     // методы запросов
     std::vector<std::shared_ptr<models::SystemLog>> find_recent_logs(size_t limit = 100);
     LogQueryResult find_by_filter(const LogFilter& filter, const Pagination& pagination = {});
-    std::vector<std::shared_ptr<models::SystemLog>> find_by_level(LogLevel level, size_t limit = 100);
-    std::vector<std::shared_ptr<models::SystemLog>> find_by_action_type(ActionType action_type, size_t limit = 100);
+    std::vector<std::shared_ptr<models::SystemLog>> find_by_level(models::LogLevel level, size_t limit = 100);
+    std::vector<std::shared_ptr<models::SystemLog>> find_by_action_type(models::ActionType action_type, size_t limit = 100);
     std::vector<std::shared_ptr<models::SystemLog>> find_by_actor(const std::string& actor_id, size_t limit = 100);
     std::vector<std::shared_ptr<models::SystemLog>> find_by_subject(const std::string& subject_id, size_t limit = 100);
     std::vector<std::shared_ptr<models::SystemLog>> find_by_ip_address(const std::string& ip_address, size_t limit = 100);
     
     // статистика
     size_t get_log_count(const LogFilter& filter = {});
-    std::vector<std::pair<LogLevel, size_t>> get_log_level_distribution();
-    std::vector<std::pair<ActionType, size_t>> get_action_type_distribution();
+    std::vector<std::pair<models::LogLevel, size_t>> get_log_level_distribution();
+    std::vector<std::pair<models::ActionType, size_t>> get_action_type_distribution();
     
     // очистка логов
     bool cleanup_old_logs(const std::chrono::system_clock::time_point& before);
@@ -67,4 +72,8 @@ private:
     std::string build_filter_condition(const LogFilter& filter);
     std::string time_point_to_sql(const std::chrono::system_clock::time_point& tp);
 };
-}
+
+// Вспомогательная функция для генерации UUID (можно вынести в отдельную утилиту)
+std::string generate_uuid();
+
+} // namespace dao
