@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     libpqxx-dev \
     build-essential \
     postgresql-client \
+    libssl-dev \
     cmake
 
 # Set the working directory inside the container
@@ -24,7 +25,7 @@ RUN find /app/src -name "*.cpp" > /app/sources.txt
 RUN echo "Found source files:" && cat /app/sources.txt
 
 # Compile your C++ application with all source files
-RUN g++ -std=c++17 -I/app -I/app/src @/app/sources.txt -o app -lpqxx -lpq -lpthread
+RUN g++ -std=c++17 -I/app -I/app/src @/app/sources.txt -o app -lpqxx -lpq -lpthread -lcrypto
 
 # Make sure the binary is executable
 RUN chmod +x app
