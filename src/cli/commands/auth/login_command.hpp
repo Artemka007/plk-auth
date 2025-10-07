@@ -5,6 +5,6 @@
 class LoginCommand : public BaseCommand {
     using BaseCommand::BaseCommand;
 
-    bool execute(const std::vector<std::string> &args);
+    bool execute(const std::vector<std::string> &args) override;
     bool isVisible() const override;
 };

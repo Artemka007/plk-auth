@@ -8,7 +8,7 @@ namespace models {
 class User {
 public:
     User() = default;
-    
+
     User(std::string first_name, std::string last_name, std::string email)
         : first_name_(std::move(first_name))
         , last_name_(std::move(last_name))
@@ -16,7 +16,7 @@ public:
         , is_active_(true)
         , password_change_required_(true) {
     }
-    
+
     // Геттеры
     const std::string& id() const { return id_; }
     const std::string& first_name() const { return first_name_; }

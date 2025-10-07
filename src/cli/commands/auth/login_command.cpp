@@ -3,9 +3,9 @@
 #include "cli/io_handler.hpp"
 #include "services/auth_service.hpp"
 
-bool LoginCommand::execute(const std::vector<std::string> &args) {
+bool LoginCommand::execute(const std::vector<std::string> &email) {
     if (args.size() != 1) {
-        io_handler_->error("Usage: login <email>");
+        io_handler_->error("Usage: login [email]");
         return false;
     }
 
