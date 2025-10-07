@@ -8,6 +8,8 @@
 #include <iomanip>
 #include <sstream>
 
+namespace services
+{
 LogService::LogService(std::shared_ptr<dao::LogDAO> log_dao)
     : log_dao_(std::move(log_dao)) {}
 
@@ -179,4 +181,5 @@ LogService::sql_string_to_time_point(const std::string &sql_time) const {
 
     std::time_t time_t_val = std::mktime(&tm);
     return std::chrono::system_clock::from_time_t(time_t_val);
+}
 }

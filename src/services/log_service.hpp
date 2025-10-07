@@ -1,5 +1,7 @@
 #pragma once
 
+#include "src/dao/user_dao.hpp"
+#include "src/dao/log_dao.hpp"
 #include "src/models/system_log.hpp"
 #include "src/models/user.hpp"
 #include "src/models/enums.hpp"
@@ -8,10 +10,8 @@
 #include <vector>
 #include <chrono>
 
-namespace dao {
-    class LogDAO;
-}
-
+namespace services
+{
 class LogService {
 public:
     explicit LogService(std::shared_ptr<dao::LogDAO> log_dao);
@@ -86,4 +86,5 @@ private:
 
     std::chrono::system_clock::time_point
     sql_string_to_time_point(const std::string &sql_time) const;
+};
 };

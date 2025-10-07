@@ -16,7 +16,7 @@ bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     const std::string &first_name = args[1];
     const std::string &last_name = args[2];
 
-    CreateUserResult result =
+    services::CreateUserResult result =
         user_service_->create_user(first_name, last_name, email);
     if (!result.success) {
         io_handler_->error("Failed to create user: " + result.message);

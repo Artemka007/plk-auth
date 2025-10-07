@@ -1,5 +1,6 @@
 #pragma once
 
+#include "src/dao/user_dao.hpp"
 #include "src/models/user.hpp"
 #include "src/models/user_role.hpp"
 #include <memory>
@@ -7,10 +8,8 @@
 #include <vector>
 #include <string>
 
-namespace dao {
-    class UserDAO;
-}
-
+namespace services
+{
 struct CreateUserResult {
     bool success = false;
     std::string message = "";
@@ -42,4 +41,5 @@ public:
 
 private:
     std::shared_ptr<dao::UserDAO> user_dao_;
+};
 };

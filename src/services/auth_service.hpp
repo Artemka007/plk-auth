@@ -1,20 +1,19 @@
 #pragma once
 
+#include "src/dao/user_dao.hpp"
 #include "src/models/user.hpp"
 #include "src/models/user_role.hpp"
 #include <memory>
 #include <string>
 
+namespace services
+{
 struct LoginResult {
     bool success;
     std::shared_ptr<models::User> user;
     bool password_change_required;
     std::string message;
 };
-
-namespace dao {
-    class UserDAO;
-} // namespace dao
 
 class AuthService {
 public:
@@ -27,3 +26,5 @@ public:
 private:
     std::shared_ptr<dao::UserDAO> user_dao_;
 };
+
+}

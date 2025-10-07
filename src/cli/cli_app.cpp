@@ -2,9 +2,13 @@
 #include "commands/command_factory.hpp"
 #include "src/models/user.hpp"
 
-CliApp::CliApp(std::shared_ptr<UserService> user_service,
-               std::shared_ptr<AuthService> auth_service,
-               std::shared_ptr<LogService> log_service,
+#include "src/services/auth_service.hpp"
+#include "src/services/log_service.hpp"
+#include "src/services/user_service.hpp"
+
+CliApp::CliApp(std::shared_ptr<services::UserService> user_service,
+               std::shared_ptr<services::AuthService> auth_service,
+               std::shared_ptr<services::LogService> log_service,
                std::shared_ptr<IOHandler> io_handler)
     : user_service_(std::move(user_service)),
       auth_service_(std::move(auth_service)),

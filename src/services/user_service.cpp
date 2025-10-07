@@ -4,6 +4,8 @@
 #include "src/models/user_role.hpp"
 #include "src/utils/password_utils.hpp"
 
+namespace services
+{
 UserService::UserService(std::shared_ptr<dao::UserDAO> user_dao)
     : user_dao_(std::move(user_dao)) {}
 
@@ -40,7 +42,7 @@ CreateUserResult UserService::create_user(const std::string &first_name,
     std::string user_password =
         utils::PasswordUtils::generate_random_password(12);
     std::string password_hash =
-        utils::PasswordUtils::hash_password(user_password);
+        utils::PasswordUtils::hash_password_pbkdf2(user_password);
 
     new_user->set_password_hash(password_hash);
     new_user->require_password_change();
@@ -128,4 +130,5 @@ bool UserService::is_user_active(
 std::vector<std::shared_ptr<models::UserRole>>
 UserService::user_roles(std::shared_ptr<const models::User> &user) {
     return user_dao_->user_roles(user);
+}
 }

@@ -3,12 +3,12 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "src/services/auth_service.hpp"
+#include "src/services/log_service.hpp"
+#include "src/services/user_service.hpp"
 
 class AppState;
 class IOHandler;
-class AuthService;
-class UserService;
-class LogService;
 
 class BaseCommand {
 public:
@@ -16,9 +16,9 @@ public:
                 std::string description,
                 std::shared_ptr<AppState> app_state,
                 std::shared_ptr<IOHandler> io_handler,
-                std::shared_ptr<AuthService> auth_service,
-                std::shared_ptr<UserService> user_service,
-                std::shared_ptr<LogService> log_service)
+                std::shared_ptr<services::AuthService> auth_service,
+                std::shared_ptr<services::UserService> user_service,
+                std::shared_ptr<services::LogService> log_service)
         : name_(std::move(name)), description_(std::move(description)),
           app_state_(std::move(app_state)), io_handler_(std::move(io_handler)),
           auth_service_(std::move(auth_service)), user_service_(std::move(user_service)),
@@ -35,9 +35,9 @@ public:
 protected:
     const std::shared_ptr<AppState> app_state_;
     const std::shared_ptr<IOHandler> io_handler_;
-    const std::shared_ptr<AuthService> auth_service_;
-    const std::shared_ptr<UserService> user_service_;
-    const std::shared_ptr<LogService> log_service_;
+    const std::shared_ptr<services::AuthService> auth_service_;
+    const std::shared_ptr<services::UserService> user_service_;
+    const std::shared_ptr<services::LogService> log_service_;
 
 private:
     const std::string name_;
