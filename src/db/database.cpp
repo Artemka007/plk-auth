@@ -7,6 +7,8 @@
 #include <sstream>
 #include <functional>
 #include <filesystem>
+#include "../dao/log_dao.hpp"
+#include "../dao/user_dao.hpp"
 
 namespace db {
 
@@ -336,20 +338,11 @@ std::unique_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
     return std::unique_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
 }
 
-std::unique_ptr<dao::UserRoleDAO> DAOFactory::create_user_role_dao() {
+std::unique_ptr<dao::LogDAO> DAOFactory::create_log_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
-    // Заглушка - нужно реализовать UserRoleDAO
-    throw std::runtime_error("UserRoleDAO not implemented yet");
+    // Включаем заголовочный файл UserDAO перед использованием
+    return std::unique_ptr<dao::LogDAO>(new dao::LogDAO(database_->get_connection()));
 }
-
-std::unique_ptr<dao::AccessPermissionDAO> DAOFactory::create_access_permission_dao() {
-    if (!database_ || !database_->get_connection()) {
-        throw std::runtime_error("Database connection is not available");
-    }
-    // Заглушка - нужно реализовать AccessPermissionDAO
-    throw std::runtime_error("AccessPermissionDAO not implemented yet");
-}
-
 } // namespace db

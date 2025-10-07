@@ -4,12 +4,7 @@
 #include <string>
 #include <pqxx/pqxx>
 #include "../dao/user_dao.hpp"
-
-// Предварительное объявление DAO классов
-namespace dao {
-    class UserRoleDAO;
-    class AccessPermissionDAO;
-}
+#include "../dao/log_dao.hpp"
 
 namespace db {
 
@@ -62,8 +57,7 @@ public:
     explicit DAOFactory(std::shared_ptr<Database> db);
     
     std::unique_ptr<dao::UserDAO> create_user_dao();
-    std::unique_ptr<dao::UserRoleDAO> create_user_role_dao();
-    std::unique_ptr<dao::AccessPermissionDAO> create_access_permission_dao();
+    std::unique_ptr<dao::LogDAO> create_log_dao();
 };
 
 } // namespace db

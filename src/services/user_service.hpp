@@ -26,12 +26,16 @@ public:
     std::vector<models::User> get_all_users();
 
     // Create
-    CreateUserResult create_user(const std::string &first_name, const std::string &last_name, const std::string &email);
+    CreateUserResult create_user(const std::string &first_name, 
+                                 const std::string &last_name, 
+                                 const std::string &email);
 
     // Delete
     bool delete_user(const std::string &email);
     bool add_role_to_user(const std::string &email, const models::UserRole role);
     bool remove_role_from_user(const std::string &email, const models::UserRole role);
+    
+    // Permissions and roles
     bool is_admin(const std::shared_ptr<const models::User> &user) const;
     bool can_manage_users(const std::shared_ptr<const models::User> &user) const;
     bool has_role(const std::shared_ptr<const models::User> &user, const std::string &role_name) const;
@@ -42,4 +46,4 @@ public:
 private:
     std::shared_ptr<dao::UserDAO> user_dao_;
 };
-};
+} // namespace services
