@@ -73,7 +73,4 @@ private:
     std::string time_point_to_sql(const std::chrono::system_clock::time_point& tp);
 };
 
-// Вспомогательная функция для генерации UUID (можно вынести в отдельную утилиту)
-std::string generate_uuid();
-
 } // namespace dao

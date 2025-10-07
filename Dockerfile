@@ -14,17 +14,17 @@ WORKDIR /app
 # Copy your C++ source code
 COPY . /app
 
-# Create src directory if it doesn't exist
-RUN mkdir -p src
+# Create necessary directories if they don't exist
+RUN mkdir -p src/dao src/db src/models src/utils
 
-# Find all .cpp files in src and main directories and compile them
-RUN find /app/src -name "*.cpp" -o -name "src/main.cpp" > /app/sources.txt
+# Find all .cpp files in src subdirectories and compile them
+RUN find /app/src -name "*.cpp" > /app/sources.txt
+
+# Print found source files for debugging
+RUN echo "Found source files:" && cat /app/sources.txt
 
 # Compile your C++ application with all source files
-RUN g++ -std=c++17 -I/app @/app/sources.txt -o app -lpqxx -lpq -lpthread
-
-# Alternative method without using file list (if above doesn't work)
-# RUN g++ -std=c++17 -I/app src/*.cpp main.cpp -o app -lpqxx -lpq -lpthread
+RUN g++ -std=c++17 -I/app -I/app/src @/app/sources.txt -o app -lpqxx -lpq -lpthread
 
 # Make sure the binary is executable
 RUN chmod +x app

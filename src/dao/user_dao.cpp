@@ -3,11 +3,87 @@
 #include <random>
 #include <sstream>
 #include <iostream>
+#include "../utils/uuid_generator.hpp"
 
 namespace dao {
 
 UserDAO::UserDAO(std::shared_ptr<pqxx::connection> conn) 
     : connection_(std::move(conn)) {
+}
+
+std::vector<std::shared_ptr<models::User>> UserDAO::find_all() {
+    std::vector<std::shared_ptr<models::User>> users;
+    
+    try {
+        pqxx::work txn(*connection_);
+        auto result = txn.exec(
+            "SELECT id, first_name, last_name, patronymic, email, phone, "
+            "password_hash, is_active, password_change_required, created_at, "
+            "updated_at, last_login_at FROM app_user ORDER BY created_at DESC");
+        
+        txn.commit();
+        
+        for (const auto& row : result) {
+            auto user = std::make_shared<models::User>();
+            user->from_row(row);
+            users.push_back(user);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in find_all: " << e.what() << std::endl;
+    }
+    
+    return users;
+}
+
+std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_password_change() {
+    std::vector<std::shared_ptr<models::User>> users;
+    
+    try {
+        pqxx::work txn(*connection_);
+        auto result = txn.exec(
+            "SELECT id, first_name, last_name, patronymic, email, phone, "
+            "password_hash, is_active, password_change_required, created_at, "
+            "updated_at, last_login_at FROM app_user "
+            "WHERE password_change_required = true AND is_active = true "
+            "ORDER BY created_at DESC");
+        
+        txn.commit();
+        
+        for (const auto& row : result) {
+            auto user = std::make_shared<models::User>();
+            user->from_row(row);
+            users.push_back(user);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in find_users_requiring_password_change: " << e.what() << std::endl;
+    }
+    
+    return users;
+}
+
+std::vector<std::shared_ptr<models::User>> UserDAO::find_active_users() {
+    std::vector<std::shared_ptr<models::User>> users;
+    
+    try {
+        pqxx::work txn(*connection_);
+        auto result = txn.exec(
+            "SELECT id, first_name, last_name, patronymic, email, phone, "
+            "password_hash, is_active, password_change_required, created_at, "
+            "updated_at, last_login_at FROM app_user "
+            "WHERE is_active = true ORDER BY created_at DESC");
+        
+        txn.commit();
+        
+        for (const auto& row : result) {
+            auto user = std::make_shared<models::User>();
+            user->from_row(row);
+            users.push_back(user);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in find_active_users: " << e.what() << std::endl;
+    }
+    
+    return users;
 }
 
 std::shared_ptr<models::User> UserDAO::find_by_id(const std::string& id) {
@@ -85,7 +161,7 @@ std::shared_ptr<models::User> UserDAO::find_by_credentials(const std::string& em
 bool UserDAO::save(const std::shared_ptr<models::User>& user) {
     try {
         if (user->id().empty()) {
-            user->set_id(generate_uuid());
+            user->set_id(utils::UUIDGenerator::generate_uuid());
         }
         
         pqxx::work txn(*connection_);
