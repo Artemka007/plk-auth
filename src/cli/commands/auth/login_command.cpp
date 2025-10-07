@@ -14,7 +14,7 @@ bool LoginCommand::execute(const std::vector<std::string> &args) {
     // Request password through secure input
     std::string password = io_handler_->read_password("Enter password for " + email + ": ");
 
-    LoginResult result = auth_service_->login(email, password);
+    services::LoginResult result = auth_service_->login(email, password);
     // Request to authentication service
     if (!result.success) {
         // TODO: Create Log

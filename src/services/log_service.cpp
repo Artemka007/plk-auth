@@ -1,5 +1,4 @@
 #include "log_service.hpp"
-#include "src/cli_app.hpp"
 #include "src/models/enums.hpp"
 #include "src/models/system_log.hpp"
 #include "src/dao/log_dao.hpp"
