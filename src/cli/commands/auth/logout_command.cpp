@@ -1,7 +1,7 @@
-#include "cli/commands/auth/LogoutCommand.hpp"
-#include "cli/AppState.hpp"
-#include "cli/IOHandler.hpp"
-#include "services/AuthService.hpp"
+#include "cli/commands/auth/logout_command.hpp"
+#include "cli/app_state.hpp"
+#include "cli/io_handler.hpp"
+#include "services/auth_service.hpp"
 
 bool LogoutCommand::execute(const std::vector<std::string> &args) {
     if (!args.empty()) {
