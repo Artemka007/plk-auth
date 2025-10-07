@@ -1,7 +1,7 @@
-#include "cli/commands/administration/DeleteUserCommand.hpp"
-#include "cli/AppState.hpp"
-#include "cli/IOHandler.hpp"
-#include "services/UserService.hpp"
+#include "cli/commands/administration/delete_user_command.hpp"
+#include "cli/app_state.hpp"
+#include "cli/io_handler.hpp"
+#include "services/user_service.hpp"
 
 bool DeleteUserCommand::execute(const std::vector<std::string> &args) {
     if (args.size() != 1) {

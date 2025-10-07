@@ -1,4 +1,4 @@
-#include "cli/AppState.hpp"
+#include "cli/app_state.hpp"
 #include "models/user.hpp"
 
 void AppState::set_current_user(const std::shared_ptr<const User> &user) { current_user_ = user; }

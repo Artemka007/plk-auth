@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cli/commands/BaseCommand.hpp"
+#include "cli/commands/base_command.hpp"
 
 class LoginCommand : public BaseCommand {
     using BaseCommand::BaseCommand;
