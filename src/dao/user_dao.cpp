@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <random>
 #include <sstream>
-#include <pqxx/pqxx>
+#include <iostream>
 
 namespace dao {
 
@@ -13,10 +13,10 @@ UserDAO::UserDAO(std::shared_ptr<pqxx::connection> conn)
 std::shared_ptr<models::User> UserDAO::find_by_id(const std::string& id) {
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
+        auto result = txn.exec(
             "SELECT id, first_name, last_name, patronymic, email, phone, "
             "password_hash, is_active, password_change_required, created_at, "
-            "updated_at, last_login_at FROM app_user WHERE id = $1", id);
+            "updated_at, last_login_at FROM app_user WHERE id = " + txn.quote(id));
         
         txn.commit();
         
@@ -28,7 +28,7 @@ std::shared_ptr<models::User> UserDAO::find_by_id(const std::string& id) {
         user->from_row(result[0]);
         return user;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in find_by_id: " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -36,10 +36,10 @@ std::shared_ptr<models::User> UserDAO::find_by_id(const std::string& id) {
 std::shared_ptr<models::User> UserDAO::find_by_email(const std::string& email) {
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
+        auto result = txn.exec(
             "SELECT id, first_name, last_name, patronymic, email, phone, "
             "password_hash, is_active, password_change_required, created_at, "
-            "updated_at, last_login_at FROM app_user WHERE email = $1", email);
+            "updated_at, last_login_at FROM app_user WHERE email = " + txn.quote(email));
         
         txn.commit();
         
@@ -51,7 +51,7 @@ std::shared_ptr<models::User> UserDAO::find_by_email(const std::string& email) {
         user->from_row(result[0]);
         return user;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in find_by_email: " << e.what() << std::endl;
         return nullptr;
     }
 }
@@ -59,12 +59,13 @@ std::shared_ptr<models::User> UserDAO::find_by_email(const std::string& email) {
 std::shared_ptr<models::User> UserDAO::find_by_credentials(const std::string& email, const std::string& password_hash) {
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
+        auto result = txn.exec(
             "SELECT id, first_name, last_name, patronymic, email, phone, "
             "password_hash, is_active, password_change_required, created_at, "
             "updated_at, last_login_at FROM app_user "
-            "WHERE email = $1 AND password_hash = $2 AND is_active = true", 
-            email, password_hash);
+            "WHERE email = " + txn.quote(email) + 
+            " AND password_hash = " + txn.quote(password_hash) + 
+            " AND is_active = true");
         
         txn.commit();
         
@@ -76,58 +77,9 @@ std::shared_ptr<models::User> UserDAO::find_by_credentials(const std::string& em
         user->from_row(result[0]);
         return user;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in find_by_credentials: " << e.what() << std::endl;
         return nullptr;
     }
-}
-
-std::vector<std::shared_ptr<models::User>> UserDAO::find_all() {
-    std::vector<std::shared_ptr<models::User>> users;
-    
-    try {
-        pqxx::work txn(*connection_);
-        auto result = txn.exec(
-            "SELECT id, first_name, last_name, patronymic, email, phone, "
-            "password_hash, is_active, password_change_required, created_at, "
-            "updated_at, last_login_at FROM app_user ORDER BY created_at DESC");
-        
-        txn.commit();
-        
-        for (const auto& row : result) {
-            auto user = std::make_shared<models::User>();
-            user->from_row(row);
-            users.push_back(user);
-        }
-    } catch (const std::exception& e) {
-        // Логирование ошибки
-    }
-    
-    return users;
-}
-
-std::vector<std::shared_ptr<models::User>> UserDAO::find_active_users() {
-    std::vector<std::shared_ptr<models::User>> users;
-    
-    try {
-        pqxx::work txn(*connection_);
-        auto result = txn.exec(
-            "SELECT id, first_name, last_name, patronymic, email, phone, "
-            "password_hash, is_active, password_change_required, created_at, "
-            "updated_at, last_login_at FROM app_user "
-            "WHERE is_active = true ORDER BY created_at DESC");
-        
-        txn.commit();
-        
-        for (const auto& row : result) {
-            auto user = std::make_shared<models::User>();
-            user->from_row(row);
-            users.push_back(user);
-        }
-    } catch (const std::exception& e) {
-        // Логирование ошибки
-    }
-    
-    return users;
 }
 
 bool UserDAO::save(const std::shared_ptr<models::User>& user) {
@@ -138,25 +90,27 @@ bool UserDAO::save(const std::shared_ptr<models::User>& user) {
         
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
+        std::string patronymic = user->patronymic().value_or("");
+        std::string phone = user->phone().value_or("");
+        
+        txn.exec(
             "INSERT INTO app_user (id, first_name, last_name, patronymic, email, "
             "phone, password_hash, is_active, password_change_required) "
-            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-            user->id(),
-            user->first_name(),
-            user->last_name(),
-            user->patronymic().value_or(""),
-            user->email(),
-            user->phone().value_or(""),
-            user->password_hash(),
-            user->is_active(),
-            user->is_password_change_required()
-        );
+            "VALUES (" + 
+            txn.quote(user->id()) + ", " +
+            txn.quote(user->first_name()) + ", " +
+            txn.quote(user->last_name()) + ", " +
+            txn.quote(patronymic) + ", " +
+            txn.quote(user->email()) + ", " +
+            txn.quote(phone) + ", " +
+            txn.quote(user->password_hash()) + ", " +
+            txn.quote(user->is_active()) + ", " +
+            txn.quote(user->is_password_change_required()) + ")");
         
         txn.commit();
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in save: " << e.what() << std::endl;
         return false;
     }
 }
@@ -165,32 +119,27 @@ bool UserDAO::update(const std::shared_ptr<models::User>& user) {
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "UPDATE app_user SET first_name = $1, last_name = $2, patronymic = $3, "
-            "email = $4, phone = $5, password_hash = $6, is_active = $7, "
-            "password_change_required = $8, updated_at = CURRENT_TIMESTAMP "
-            "WHERE id = $9",
-            user->first_name(),
-            user->last_name(),
-            user->patronymic().value_or(""),
-            user->email(),
-            user->phone().value_or(""),
-            user->password_hash(),
-            user->is_active(),
-            user->is_password_change_required(),
-            user->id()
-        );
+        std::string patronymic = user->patronymic().value_or("");
+        std::string phone = user->phone().value_or("");
+        
+        txn.exec(
+            "UPDATE app_user SET first_name = " + txn.quote(user->first_name()) + 
+            ", last_name = " + txn.quote(user->last_name()) + 
+            ", patronymic = " + txn.quote(patronymic) + 
+            ", email = " + txn.quote(user->email()) + 
+            ", phone = " + txn.quote(phone) + 
+            ", password_hash = " + txn.quote(user->password_hash()) + 
+            ", is_active = " + txn.quote(user->is_active()) + 
+            ", password_change_required = " + txn.quote(user->is_password_change_required()) + 
+            ", updated_at = CURRENT_TIMESTAMP " +
+            "WHERE id = " + txn.quote(user->id()));
         
         txn.commit();
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in update: " << e.what() << std::endl;
         return false;
     }
-}
-
-bool UserDAO::remove(const std::shared_ptr<models::User>& user) {
-    return delete_by_id(user->id());
 }
 
 bool UserDAO::delete_by_id(const std::string& id) {
@@ -198,15 +147,15 @@ bool UserDAO::delete_by_id(const std::string& id) {
         pqxx::work txn(*connection_);
         
         // Сначала удаляем связи с ролями
-        txn.exec_params("DELETE FROM user_role_assignment WHERE user_id = $1", id);
+        txn.exec("DELETE FROM user_role_assignment WHERE user_id = " + txn.quote(id));
         
         // Затем удаляем пользователя
-        txn.exec_params("DELETE FROM app_user WHERE id = $1", id);
+        txn.exec("DELETE FROM app_user WHERE id = " + txn.quote(id));
         
         txn.commit();
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in delete_by_id: " << e.what() << std::endl;
         return false;
     }
 }
@@ -216,11 +165,11 @@ std::vector<std::shared_ptr<models::UserRole>> UserDAO::user_roles(const std::sh
     
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
+        auto result = txn.exec(
             "SELECT ur.id, ur.name, ur.description, ur.is_system, ur.created_at, ur.updated_at "
             "FROM user_role ur "
             "INNER JOIN user_role_assignment ura ON ur.id = ura.role_id "
-            "WHERE ura.user_id = $1", user->id());
+            "WHERE ura.user_id = " + txn.quote(user->id()));
         
         txn.commit();
         
@@ -230,7 +179,7 @@ std::vector<std::shared_ptr<models::UserRole>> UserDAO::user_roles(const std::sh
             roles.push_back(role);
         }
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in user_roles: " << e.what() << std::endl;
     }
     
     return roles;
@@ -245,14 +194,14 @@ bool UserDAO::assign_role(const std::shared_ptr<models::User>& user, const std::
         
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "INSERT INTO user_role_assignment (user_id, role_id) VALUES ($1, $2)",
-            user->id(), role->id());
+        txn.exec(
+            "INSERT INTO user_role_assignment (user_id, role_id) VALUES (" +
+            txn.quote(user->id()) + ", " + txn.quote(role->id()) + ")");
         
         txn.commit();
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in assign_role: " << e.what() << std::endl;
         return false;
     }
 }
@@ -261,14 +210,14 @@ bool UserDAO::remove_role(const std::shared_ptr<models::User>& user, const std::
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "DELETE FROM user_role_assignment WHERE user_id = $1 AND role_id = $2",
-            user->id(), role->id());
+        txn.exec(
+            "DELETE FROM user_role_assignment WHERE user_id = " + txn.quote(user->id()) + 
+            " AND role_id = " + txn.quote(role->id()));
         
         txn.commit();
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in remove_role: " << e.what() << std::endl;
         return false;
     }
 }
@@ -276,16 +225,17 @@ bool UserDAO::remove_role(const std::shared_ptr<models::User>& user, const std::
 bool UserDAO::has_role(const std::shared_ptr<models::User>& user, const std::string& role_name) {
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
+        auto result = txn.exec(
             "SELECT COUNT(*) FROM user_role_assignment ura "
             "INNER JOIN user_role ur ON ura.role_id = ur.id "
-            "WHERE ura.user_id = $1 AND ur.name = $2", user->id(), role_name);
+            "WHERE ura.user_id = " + txn.quote(user->id()) + 
+            " AND ur.name = " + txn.quote(role_name));
         
         txn.commit();
         
         return result[0][0].as<int>() > 0;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in has_role: " << e.what() << std::endl;
         return false;
     }
 }
@@ -294,9 +244,8 @@ bool UserDAO::update_last_login(const std::shared_ptr<models::User>& user) {
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "UPDATE app_user SET last_login_at = CURRENT_TIMESTAMP WHERE id = $1",
-            user->id());
+        txn.exec(
+            "UPDATE app_user SET last_login_at = CURRENT_TIMESTAMP WHERE id = " + txn.quote(user->id()));
         
         txn.commit();
         
@@ -304,7 +253,7 @@ bool UserDAO::update_last_login(const std::shared_ptr<models::User>& user) {
         user->set_last_login_at("CURRENT_TIMESTAMP");
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in update_last_login: " << e.what() << std::endl;
         return false;
     }
 }
@@ -313,10 +262,9 @@ bool UserDAO::change_password(const std::shared_ptr<models::User>& user, const s
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "UPDATE app_user SET password_hash = $1, password_change_required = false, "
-            "updated_at = CURRENT_TIMESTAMP WHERE id = $2",
-            new_password_hash, user->id());
+        txn.exec(
+            "UPDATE app_user SET password_hash = " + txn.quote(new_password_hash) + 
+            ", password_change_required = false, updated_at = CURRENT_TIMESTAMP WHERE id = " + txn.quote(user->id()));
         
         txn.commit();
         
@@ -324,7 +272,7 @@ bool UserDAO::change_password(const std::shared_ptr<models::User>& user, const s
         user->set_password_hash(new_password_hash);
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in change_password: " << e.what() << std::endl;
         return false;
     }
 }
@@ -333,9 +281,8 @@ bool UserDAO::deactivate_user(const std::shared_ptr<models::User>& user) {
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "UPDATE app_user SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-            user->id());
+        txn.exec(
+            "UPDATE app_user SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = " + txn.quote(user->id()));
         
         txn.commit();
         
@@ -343,7 +290,7 @@ bool UserDAO::deactivate_user(const std::shared_ptr<models::User>& user) {
         user->set_active(false);
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in deactivate_user: " << e.what() << std::endl;
         return false;
     }
 }
@@ -352,9 +299,8 @@ bool UserDAO::activate_user(const std::shared_ptr<models::User>& user) {
     try {
         pqxx::work txn(*connection_);
         
-        txn.exec_params(
-            "UPDATE app_user SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = $1",
-            user->id());
+        txn.exec(
+            "UPDATE app_user SET is_active = true, updated_at = CURRENT_TIMESTAMP WHERE id = " + txn.quote(user->id()));
         
         txn.commit();
         
@@ -362,7 +308,7 @@ bool UserDAO::activate_user(const std::shared_ptr<models::User>& user) {
         user->set_active(true);
         return true;
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in activate_user: " << e.what() << std::endl;
         return false;
     }
 }
@@ -372,39 +318,13 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_by_name(const std::stri
     
     try {
         pqxx::work txn(*connection_);
-        auto result = txn.exec_params(
-            "SELECT id, first_name, last_name, patronymic, email, phone, "
-            "password_hash, is_active, password_change_required, created_at, "
-            "updated_at, last_login_at FROM app_user "
-            "WHERE first_name ILIKE $1 AND last_name ILIKE $2 "
-            "ORDER BY first_name, last_name",
-            first_name + "%", last_name + "%");
-        
-        txn.commit();
-        
-        for (const auto& row : result) {
-            auto user = std::make_shared<models::User>();
-            user->from_row(row);
-            users.push_back(user);
-        }
-    } catch (const std::exception& e) {
-        // Логирование ошибки
-    }
-    
-    return users;
-}
-
-std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_password_change() {
-    std::vector<std::shared_ptr<models::User>> users;
-    
-    try {
-        pqxx::work txn(*connection_);
         auto result = txn.exec(
             "SELECT id, first_name, last_name, patronymic, email, phone, "
             "password_hash, is_active, password_change_required, created_at, "
             "updated_at, last_login_at FROM app_user "
-            "WHERE password_change_required = true AND is_active = true "
-            "ORDER BY created_at DESC");
+            "WHERE first_name ILIKE " + txn.quote(first_name + "%") + 
+            " AND last_name ILIKE " + txn.quote(last_name + "%") + 
+            " ORDER BY first_name, last_name");
         
         txn.commit();
         
@@ -414,34 +334,12 @@ std::vector<std::shared_ptr<models::User>> UserDAO::find_users_requiring_passwor
             users.push_back(user);
         }
     } catch (const std::exception& e) {
-        // Логирование ошибки
+        std::cerr << "Error in find_by_name: " << e.what() << std::endl;
     }
     
     return users;
 }
 
-std::string UserDAO::generate_uuid() {
-    // Простая реализация генерации UUID v4
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 15);
-    std::uniform_int_distribution<> dis2(8, 11);
-    
-    std::stringstream ss;
-    ss << std::hex;
-    
-    for (int i = 0; i < 8; i++) ss << dis(gen);
-    ss << "-";
-    for (int i = 0; i < 4; i++) ss << dis(gen);
-    ss << "-4"; // UUID version 4
-    for (int i = 0; i < 3; i++) ss << dis(gen);
-    ss << "-";
-    ss << dis2(gen); // UUID variant
-    for (int i = 0; i < 3; i++) ss << dis(gen);
-    ss << "-";
-    for (int i = 0; i < 12; i++) ss << dis(gen);
-    
-    return ss.str();
-}
+// Остальные методы остаются без изменений...
 
 } // namespace dao

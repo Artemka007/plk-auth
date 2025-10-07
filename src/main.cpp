@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "database.hpp"
+#include "./db/database.hpp"
 
 int main() {
     std::cout << "Starting C++ PostgreSQL Application...\n";

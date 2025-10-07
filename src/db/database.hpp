@@ -1,11 +1,12 @@
 #pragma once
+#include <iostream>
 #include <memory>
 #include <string>
 #include <pqxx/pqxx>
+#include "../dao/user_dao.hpp"
 
 // Предварительное объявление DAO классов
 namespace dao {
-    class UserDAO;
     class UserRoleDAO;
     class AccessPermissionDAO;
 }

@@ -18,7 +18,7 @@ COPY . /app
 RUN mkdir -p src
 
 # Find all .cpp files in src and main directories and compile them
-RUN find /app/src -name "*.cpp" -o -name "main.cpp" > /app/sources.txt
+RUN find /app/src -name "*.cpp" -o -name "src/main.cpp" > /app/sources.txt
 
 # Compile your C++ application with all source files
 RUN g++ -std=c++17 -I/app @/app/sources.txt -o app -lpqxx -lpq -lpthread

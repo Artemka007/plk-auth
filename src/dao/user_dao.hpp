@@ -2,8 +2,10 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <pqxx/pqxx>
 #include "../models/user.hpp"
 #include "../models/user_role.hpp"
+#include "../models/user_role_assignment.hpp"
 
 namespace dao {
 
@@ -17,7 +19,7 @@ public:
     // CRUD операции
     std::shared_ptr<models::User> find_by_id(const std::string& id);
     std::shared_ptr<models::User> find_by_email(const std::string& email);
-    std::shared_ptr<models::User> find_by_credentials(const std::string& email, const std::string& password);
+    std::shared_ptr<models::User> find_by_credentials(const std::string& email, const std::string& password_hash);
     std::vector<std::shared_ptr<models::User>> find_all();
     std::vector<std::shared_ptr<models::User>> find_active_users();
     bool save(const std::shared_ptr<models::User>& user);
@@ -26,31 +28,25 @@ public:
     bool delete_by_id(const std::string& id);
     
     // Управление ролями
-    std::vector<std::shared_ptr<models::UserRole>> user_roles(
-        const std::shared_ptr<models::User>& user);
-    bool assign_role(
-        const std::shared_ptr<models::User>& user,
-        const std::shared_ptr<models::UserRole>& role);
-    bool remove_role(
-        const std::shared_ptr<models::User>& user,
-        const std::shared_ptr<models::UserRole>& role);
-    bool has_role(
-        const std::shared_ptr<models::User>& user,
-        const std::string& role_name);
+    std::vector<std::shared_ptr<models::UserRole>> user_roles(const std::shared_ptr<models::User>& user);
+    bool assign_role(const std::shared_ptr<models::User>& user, const std::shared_ptr<models::UserRole>& role);
+    bool remove_role(const std::shared_ptr<models::User>& user, const std::shared_ptr<models::UserRole>& role);
+    bool has_role(const std::shared_ptr<models::User>& user, const std::string& role_name);
     
     // Бизнес-методы
     bool update_last_login(const std::shared_ptr<models::User>& user);
-    bool change_password(
-        const std::shared_ptr<models::User>& user,
-        const std::string& new_password_hash);
+    bool change_password(const std::shared_ptr<models::User>& user, const std::string& new_password_hash);
     bool deactivate_user(const std::shared_ptr<models::User>& user);
     bool activate_user(const std::shared_ptr<models::User>& user);
     
     // Поиск и фильтрация
-    std::vector<std::shared_ptr<models::User>> find_by_name(
-        const std::string& first_name, 
-        const std::string& last_name);
+    std::vector<std::shared_ptr<models::User>> find_by_name(const std::string& first_name, const std::string& last_name);
     std::vector<std::shared_ptr<models::User>> find_users_requiring_password_change();
+
+private:
+    std::string generate_uuid();
+    std::shared_ptr<models::User> user_from_row(const pqxx::row& row);
+    std::shared_ptr<models::UserRole> role_from_row(const pqxx::row& row);
 };
 
 } // namespace dao

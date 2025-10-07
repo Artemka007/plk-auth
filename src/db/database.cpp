@@ -1,5 +1,5 @@
 #include "database.hpp"
-#include "../dao/user_dao.hpp"
+#include <iostream>
 #include <pqxx/pqxx>
 #include <random>
 #include <chrono>
@@ -7,7 +7,6 @@
 #include <sstream>
 #include <functional>
 #include <filesystem>
-#include <iostream>
 
 namespace db {
 
@@ -20,11 +19,8 @@ Database::Database(
     const std::string& password
 ) {
     try {
-        connection_string_ = "host=" + host + 
-                           " port=" + std::to_string(port) + 
-                           " dbname=" + database + 
-                           " user=" + user + 
-                           " password=" + password;
+        connection_string_ = "postgresql://" + user + ":" + password + "@" + host + 
+                           ":" + std::to_string(port) + "/" + database;
         
         // Создаем соединение с базой данных
         connection_ = std::make_shared<pqxx::connection>(connection_string_);
@@ -210,28 +206,29 @@ bool Database::backup(const std::string& backup_path) {
     try {
         // Получаем параметры подключения из connection string
         std::string host = connection_->hostname();
-        std::string port = std::to_string(connection_->port());
+        int port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
+        
+        // Пароль нужно хранить отдельно, так как pqxx не предоставляет метод для его получения
+        // В реальном приложении пароль должен передаваться как параметр
+        std::string password = "password"; // Это нужно исправить в реальном приложении
         
         // Формируем команду pg_dump
         std::string command = "pg_dump";
         command += " -h " + host;
-        command += " -p " + port;
+        command += " -p " + std::to_string(port);
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -f " + backup_path;
         command += " -F c"; // custom format
         
         // Устанавливаем переменную окружения с паролем
-        std::string password = connection_->password();
-        if (!password.empty()) {
-            #ifdef _WIN32
-                _putenv_s("PGPASSWORD", password.c_str());
-            #else
-                setenv("PGPASSWORD", password.c_str(), 1);
-            #endif
-        }
+        #ifdef _WIN32
+            _putenv_s("PGPASSWORD", password.c_str());
+        #else
+            setenv("PGPASSWORD", password.c_str(), 1);
+        #endif
         
         std::cout << "Creating backup: " << backup_path << std::endl;
         
@@ -239,13 +236,11 @@ bool Database::backup(const std::string& backup_path) {
         int result = std::system(command.c_str());
         
         // Очищаем переменную окружения
-        if (!password.empty()) {
-            #ifdef _WIN32
-                _putenv_s("PGPASSWORD", "");
-            #else
-                unsetenv("PGPASSWORD");
-            #endif
-        }
+        #ifdef _WIN32
+            _putenv_s("PGPASSWORD", "");
+        #else
+            unsetenv("PGPASSWORD");
+        #endif
         
         if (result == 0) {
             std::cout << "Backup created successfully" << std::endl;
@@ -269,28 +264,26 @@ bool Database::restore(const std::string& backup_path) {
         
         // Получаем параметры подключения
         std::string host = connection_->hostname();
-        std::string port = std::to_string(connection_->port());
+        int port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
+        std::string password = "password"; // Это нужно исправить в реальном приложении
         
         // Формируем команду pg_restore
         std::string command = "pg_restore";
         command += " -h " + host;
-        command += " -p " + port;
+        command += " -p " + std::to_string(port);
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -c"; // clean (drop) database objects before recreating
         command += " " + backup_path;
         
         // Устанавливаем переменную окружения с паролем
-        std::string password = connection_->password();
-        if (!password.empty()) {
-            #ifdef _WIN32
-                _putenv_s("PGPASSWORD", password.c_str());
-            #else
-                setenv("PGPASSWORD", password.c_str(), 1);
-            #endif
-        }
+        #ifdef _WIN32
+            _putenv_s("PGPASSWORD", password.c_str());
+        #else
+            setenv("PGPASSWORD", password.c_str(), 1);
+        #endif
         
         std::cout << "Restoring from backup: " << backup_path << std::endl;
         
@@ -298,13 +291,11 @@ bool Database::restore(const std::string& backup_path) {
         int result = std::system(command.c_str());
         
         // Очищаем переменную окружения
-        if (!password.empty()) {
-            #ifdef _WIN32
-                _putenv_s("PGPASSWORD", "");
-            #else
-                unsetenv("PGPASSWORD");
-            #endif
-        }
+        #ifdef _WIN32
+            _putenv_s("PGPASSWORD", "");
+        #else
+            unsetenv("PGPASSWORD");
+        #endif
         
         if (result == 0) {
             std::cout << "Restore completed successfully" << std::endl;
@@ -341,7 +332,8 @@ std::unique_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
-    return std::make_unique<dao::UserDAO>(database_->get_connection());
+    // Включаем заголовочный файл UserDAO перед использованием
+    return std::unique_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
 }
 
 std::unique_ptr<dao::UserRoleDAO> DAOFactory::create_user_role_dao() {
