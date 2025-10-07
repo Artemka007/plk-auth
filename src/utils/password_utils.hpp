@@ -8,6 +8,7 @@
 #include <openssl/rand.h>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 namespace utils {
 class PasswordUtils {

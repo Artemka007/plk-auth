@@ -7,7 +7,7 @@
 #include "./services/auth_service.hpp"
 #include "./services/log_service.hpp"
 #include "./cli/cli_app.hpp"
-#include "./cli/io_handler.hpp"
+#include "./cli/standard_io_handler.hpp"
 
 // Функция для создания и настройки всех зависимостей
 std::shared_ptr<CliApp> create_cli_app() {
@@ -45,7 +45,7 @@ std::shared_ptr<CliApp> create_cli_app() {
         auto log_service = std::make_shared<services::LogService>(log_dao);
         
         // 6. Создаем CLI компоненты
-        auto io_handler = std::make_shared<IOHandler>();
+        auto io_handler = std::make_shared<StandardIOHandler>();
         
         // 7. Создаем и возвращаем CliApp
         return std::make_shared<CliApp>(user_service, auth_service, log_service, io_handler);

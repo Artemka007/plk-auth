@@ -1,13 +1,12 @@
 #pragma once
 
-#include "src/dao/user_dao.hpp"
-#include "src/models/user.hpp"
-#include "src/models/user_role.hpp"
 #include <memory>
 #include <string>
+#include "src/dao/user_dao.hpp"
+#include "src/models/user.hpp"
 
-namespace services
-{
+namespace services {
+
 struct LoginResult {
     bool success;
     std::shared_ptr<models::User> user;
@@ -18,13 +17,25 @@ struct LoginResult {
 class AuthService {
 public:
     explicit AuthService(std::shared_ptr<dao::UserDAO> user_dao);
-
+    
+    // Основные методы аутентификации
     LoginResult login(const std::string &email, const std::string &password);
-
+    bool authenticate(const std::string& email, const std::string& password);
+    void logout();
+    bool is_authenticated() const;
+    
+    // Управление паролями
+    bool change_password(const std::string& email, const std::string& old_password, const std::string& new_password);
+    
+    // Информация о текущем пользователе
+    std::shared_ptr<models::User> get_current_user() const;
+    
+    // Вспомогательные методы
     void update_last_login(const std::shared_ptr<models::User> &user);
 
 private:
     std::shared_ptr<dao::UserDAO> user_dao_;
+    std::shared_ptr<models::User> current_user_;
 };
 
-}
+} // namespace services
