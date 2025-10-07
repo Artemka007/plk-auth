@@ -1,5 +1,5 @@
-#include "database.hpp"
-#include "user_dao.hpp"
+#include "./database.hpp"
+#include "../dao/user_dao.hpp"
 #include <odb/schema-catalog.hxx>
 #include <odb/connection.hxx>
 #include <random>
