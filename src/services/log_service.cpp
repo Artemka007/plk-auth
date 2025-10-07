@@ -1,6 +1,7 @@
 #include "services/log_service.hpp"
 #include "dao/log_dao.hpp"
 #include "models/system_log.hpp"
+#include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
@@ -91,7 +92,7 @@ void LogService::critical(ActionType action_type, const std::string &message,
 
 std::vector<std::shared_ptr<models::SystemLog>>
 LogService::get_recent_logs(size_t limit) {
-    return log_dao_->find_recent(limit);
+    return log_dao_->find_recent_logs(limit);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
@@ -101,48 +102,75 @@ LogService::get_logs_by_level(LogLevel level, size_t limit) {
 
 std::vector<std::shared_ptr<models::SystemLog>>
 LogService::get_logs_by_action(ActionType action_type, size_t limit) {
-    return log_dao_->find_by_action(action_type, limit);
+    return log_dao_->find_by_action_type(action_type, limit);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_actor_email(const std::string &email, size_t limit) {
-    return log_dao_->find_by_actor_email(email, limit);
+LogService::get_logs_by_actor_id(const std::string &actor_id, size_t limit) {
+    return log_dao_->find_by_actor(actor_id, limit);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_subject_email(const std::string &email, size_t limit) {
-    return log_dao_->find_by_subject_email(email, limit);
-}
-
-std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_actor_id(const std::string &user_id, size_t limit) {
-    return log_dao_->find_by_actor_id(user_id, limit);
-}
-
-std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_subject_id(const std::string &user_id, size_t limit) {
-    return log_dao_->find_by_subject_id(user_id, limit);
+LogService::get_logs_by_subject_id(const std::string &subject_id,
+                                   size_t limit) {
+    return log_dao_->find_by_subject(subject_id, limit);
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
 LogService::get_logs_by_date_range(const std::string &start_date,
                                    const std::string &end_date, size_t limit) {
-    return log_dao_->find_by_date_range(start_date, end_date, limit);
+    auto start_tp = sql_string_to_time_point(start_date);
+    auto end_tp = sql_string_to_time_point(end_date);
+
+    if (start_tp.time_since_epoch().count() == 0 ||
+        end_tp.time_since_epoch().count() == 0) {
+        return {};
+    }
+
+    return get_logs_by_time_range(start_tp, end_tp, limit);
 }
+
+// TODO: Optionally implement search by time range in LogDAO
+// std::vector<std::shared_ptr<models::SystemLog>>
+// LogService::get_logs_by_date_range(const std::string &start_date,
+//                                    const std::string &end_date, size_t limit)
+//                                    {
+//     return log_dao_->find_by_date_range(start_date, end_date, limit);
+// }
 
 bool LogService::cleanup_old_logs(int days_to_keep) {
-    return log_dao_->delete_older_than(days_to_keep);
+    std::chrono::time_point now = std::chrono::system_clock::now();
+    std::chrono::time_point days_to_substract =
+        std::chrono::hours(24 * days_to_keep);
+    std::chrono::time_point cutoff_time = now - days_to_substract;
+
+    return log_dao_->cleanup_old_logs(cutoff_time);
 }
 
-bool LogService::delete_log_entry(const std::string &log_id) {
-    return log_dao_->delete_by_id(log_id);
+bool LogService::delete_logs(const std::vector<std::shared_ptr<models::SystemLog>> &logs) {
+    bool all_deleted = true;
+    for (auto &log : logs) {
+        if (!log_dao_->remove(log)) {
+            all_deleted = false;
+        }
+    }
+    return all_deleted;
 }
 
-size_t LogService::get_total_log_count() { return log_dao_->get_total_count(); }
+size_t LogService::get_total_log_count() { return log_dao_->get_log_count(); }
 
-std::vector<std::shared_ptr<models::SystemLog>>
-LogService::search_logs(const std::string &query, size_t limit) {
-    return log_dao_->search(query, limit);
+std::chrono::system_clock::time_point
+LogService::sql_string_to_time_point(const std::string &sql_time) const {
+    std::tm tm = {};
+    std::istringstream ss(sql_time);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+
+    if (ss.fail()) {
+        return std::chrono::system_clock::time_point{};
+    }
+
+    std::time_t time_t_val = std::mktime(&tm);
+    return std::chrono::system_clock::from_time_t(time_t_val);
 }
 
 } // namespace services
