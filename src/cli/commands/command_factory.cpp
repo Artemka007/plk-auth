@@ -15,20 +15,21 @@ CommandFactory::create_all_commands(std::shared_ptr<AppState> app_state,
     std::vector<std::unique_ptr<BaseCommand>> commands;
 
     // Create Help Command
-    auto help_cmd = std::make_unique<HelpCommand>("help", "Show help", app_state, io_handler,
-                                                  auth_service, user_service, log_service);
+    auto help_cmd = std::make_unique<HelpCommand>(
+        "help", "Show help", app_state, io_handler, auth_service, user_service,
+        log_service);
     BaseCommand *help_ptr = help_cmd.get();
     commands.push_back(std::move(help_cmd));
 
     // Create Exit Command
-    commands.push_back(std::make_unique<ExitCommand>("exit", "Exit the application", app_state,
-                                                     io_handler, auth_service, user_service,
-                                                     log_service));
+    commands.push_back(std::make_unique<ExitCommand>(
+        "exit", "Exit the application", app_state, io_handler, auth_service,
+        user_service, log_service));
 
     // Create WhoAmI Command
     commands.push_back(std::make_unique<WhoAmICommand>(
-        "whoami", "Print short information about yourself", app_state, io_handler, auth_service,
-        user_service, log_service));
+        "whoami", "Print short information about yourself", app_state,
+        io_handler, auth_service, user_service, log_service));
 
     std::unordered_map<std::string, BaseCommand *> command_map;
     for (const auto &cmd : commands) {
