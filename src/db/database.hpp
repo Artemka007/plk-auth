@@ -1,57 +1,58 @@
 #pragma once
 #include <memory>
 #include <string>
-#include <odb/database.hxx>
-#include <odb/pgsql/database.hxx>
-#include <odb/transaction.hxx>
-#include "../dao/user_dao.hpp"
+#include <pqxx/pqxx>
+
+// Предварительное объявление DAO классов
+namespace dao {
+    class UserDAO;
+    class UserRoleDAO;
+    class AccessPermissionDAO;
+}
 
 namespace db {
 
 class Database {
 private:
-    std::shared_ptr<odb::core::database> database_;
+    std::shared_ptr<pqxx::connection> connection_;
     std::string connection_string_;
 
 public:
-    // Конструктор PostgreSQL
-    explicit Database(
-        const std::string& host = "localhost",
-        unsigned int port = 5432,
-        const std::string& database = "pl",
-        const std::string& user = "postgres",
-        const std::string& password = "q1w2e3r4"
+    Database(
+        const std::string& host,
+        unsigned int port,
+        const std::string& database,
+        const std::string& user,
+        const std::string& password
     );
     
-    // Фабричный метод
     static std::shared_ptr<Database> create(
-        const std::string& host = "localhost",
-        unsigned int port = 5432,
-        const std::string& database = "pl",
-        const std::string& user = "postgres",
-        const std::string& password = "q1w2e3r4"
-    );
+        const std::string& host,
+        unsigned int port,
+        const std::string& database,
+        const std::string& user,
+        const std::string& password);
     
-    // Получить underlying ODB database
-    std::shared_ptr<odb::core::database> get_odb_database() const { return database_; }
-    const std::string& get_connection_string() const { return connection_string_; }
-    
-    // Управление соединением
+    // Основные операции
     bool test_connection();
     void close();
-    
-    // Миграции и схема
     bool create_schema();
     bool drop_schema();
-    
-    // Транзакции
-    odb::transaction begin_transaction();
-    
-    // Резервное копирование (для PostgreSQL можно добавить pg_dump)
+    std::unique_ptr<pqxx::work> begin_transaction();
     bool backup(const std::string& backup_path);
+    bool restore(const std::string& backup_path);
+    
+    // Геттеры
+    std::shared_ptr<pqxx::connection> get_connection() const { return connection_; }
+    const std::string& get_connection_string() const { return connection_string_; }
+    std::string get_connection_info() const;
+    
+    // Проверка состояния
+    bool is_connected() const { 
+        return connection_ && connection_->is_open(); 
+    }
 };
 
-// Фабрика для создания DAO
 class DAOFactory {
 private:
     std::shared_ptr<Database> database_;
@@ -59,11 +60,9 @@ private:
 public:
     explicit DAOFactory(std::shared_ptr<Database> db);
     
-    // Создание DAO объектов
     std::unique_ptr<dao::UserDAO> create_user_dao();
-    
-    // Получить базу данных
-    std::shared_ptr<Database> get_database() const { return database_; }
+    std::unique_ptr<dao::UserRoleDAO> create_user_role_dao();
+    std::unique_ptr<dao::AccessPermissionDAO> create_access_permission_dao();
 };
 
 } // namespace db

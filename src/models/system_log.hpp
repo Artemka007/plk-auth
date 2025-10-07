@@ -1,15 +1,12 @@
 #pragma once
 #include <string>
 #include <memory>
-#include <odb/core.hxx>
-#include <odb/lazy-ptr.hxx>
-#include <odb/nullable.hxx>
+#include <pqxx/pqxx>
 #include "enums.hpp"
 #include "user.hpp"
 
 namespace models {
 
-#pragma db object table("system_log")
 class SystemLog {
 public:
     SystemLog() = default;
@@ -27,50 +24,142 @@ public:
     const std::string& message() const { return message_; }
     const std::string& timestamp() const { return timestamp_; }
     
-    const odb::nullable<odb::lazy_shared_ptr<User>>& actor() const { return actor_; }
-    const odb::nullable<odb::lazy_shared_ptr<User>>& subject() const { return subject_; }
-    const odb::nullable<std::string>& ip_address() const { return ip_address_; }
-    const odb::nullable<std::string>& user_agent() const { return user_agent_; }
+    const std::string& actor_id() const { return actor_id_; }
+    const std::string& subject_id() const { return subject_id_; }
+    const std::optional<std::string>& ip_address() const { return ip_address_; }
+    const std::optional<std::string>& user_agent() const { return user_agent_; }
     
     // Сеттеры
-    void set_actor(const odb::lazy_shared_ptr<User>& actor) { actor_ = actor; }
-    void set_subject(const odb::lazy_shared_ptr<User>& subject) { subject_ = subject; }
-    void set_ip_address(const std::string& ip) { ip_address_ = ip; }
-    void set_user_agent(const std::string& agent) { user_agent_ = agent; }
+    void set_id(const std::string& id) { id_ = id; }
+    void set_level(LogLevel level) { level_ = level; }
+    void set_action_type(ActionType action_type) { action_type_ = action_type; }
+    void set_message(const std::string& message) { message_ = message; }
+    void set_timestamp(const std::string& timestamp) { timestamp_ = timestamp; }
+    void set_actor_id(const std::string& actor_id) { actor_id_ = actor_id; }
+    void set_subject_id(const std::string& subject_id) { subject_id_ = subject_id; }
+    void set_ip_address(const std::optional<std::string>& ip) { ip_address_ = ip; }
+    void set_user_agent(const std::optional<std::string>& agent) { user_agent_ = agent; }
+
+    // Вспомогательные методы
+    std::string level_string() const {
+        return to_string(level_);
+    }
+    
+    std::string action_type_string() const {
+        return to_string(action_type_);
+    }
+    
+    // Сериализация для вставки
+    std::vector<std::string> get_insert_values() const {
+        return {
+            id_,
+            to_string(level_),
+            to_string(action_type_),
+            message_,
+            actor_id_.empty() ? "NULL" : actor_id_,
+            subject_id_.empty() ? "NULL" : subject_id_,
+            ip_address_.value_or("NULL"),
+            user_agent_.value_or("NULL")
+        };
+    }
+
+    // Десериализация из pqxx
+    void from_row(const pqxx::row& row) {
+        id_ = row["id"].as<std::string>();
+        
+        // Преобразуем строку обратно в enum
+        std::string level_str = row["level"].as<std::string>();
+        level_ = string_to_log_level(level_str);
+        
+        std::string action_str = row["action_type"].as<std::string>();
+        action_type_ = string_to_action_type(action_str);
+        
+        message_ = row["message"].as<std::string>();
+        timestamp_ = row["timestamp"].as<std::string>();
+        
+        // Обработка nullable полей
+        if (!row["actor_id"].is_null()) {
+            actor_id_ = row["actor_id"].as<std::string>();
+        } else {
+            actor_id_.clear();
+        }
+        
+        if (!row["subject_id"].is_null()) {
+            subject_id_ = row["subject_id"].as<std::string>();
+        } else {
+            subject_id_.clear();
+        }
+        
+        if (!row["ip_address"].is_null()) {
+            ip_address_ = row["ip_address"].as<std::string>();
+        } else {
+            ip_address_.reset();
+        }
+        
+        if (!row["user_agent"].is_null()) {
+            user_agent_ = row["user_agent"].as<std::string>();
+        } else {
+            user_agent_.reset();
+        }
+    }
 
 private:
-    friend class odb::access;
-    
-    #pragma db id type("VARCHAR(36)")
     std::string id_;
-    
-    #pragma db not_null
     LogLevel level_;
-    
-    #pragma db not_null
     ActionType action_type_;
-    
-    #pragma db type("TEXT") not_null
     std::string message_;
-    
-    #pragma db type("TIMESTAMP") default("CURRENT_TIMESTAMP")
     std::string timestamp_;
+    std::string actor_id_;      // ID пользователя-исполнителя действия
+    std::string subject_id_;    // ID пользователя-объекта действия
+    std::optional<std::string> ip_address_;
+    std::optional<std::string> user_agent_;
+
+    // Вспомогательные функции для преобразования строк в enum
+    LogLevel string_to_log_level(const std::string& level_str) {
+        static const std::unordered_map<std::string, LogLevel> level_map = {
+            {"DEBUG", LogLevel::DEBUG},
+            {"INFO", LogLevel::INFO},
+            {"WARNING", LogLevel::WARNING},
+            {"ERROR", LogLevel::ERROR},
+            {"CRITICAL", LogLevel::CRITICAL}
+        };
+        
+        auto it = level_map.find(level_str);
+        if (it != level_map.end()) {
+            return it->second;
+        }
+        return LogLevel::INFO; // значение по умолчанию
+    }
     
-    #pragma db null
-    #pragma db type("VARCHAR(36)")
-    #pragma db column("actor_id")
-    odb::nullable<odb::lazy_shared_ptr<User>> actor_;
-    
-    #pragma db null
-    #pragma db type("VARCHAR(36)")
-    #pragma db column("subject_id")
-    odb::nullable<odb::lazy_shared_ptr<User>> subject_;
-    
-    #pragma db type("VARCHAR(45)") null
-    odb::nullable<std::string> ip_address_;
-    
-    #pragma db type("TEXT") null
-    odb::nullable<std::string> user_agent_;
+    ActionType string_to_action_type(const std::string& action_str) {
+        static const std::unordered_map<std::string, ActionType> action_map = {
+            {"USER_CREATED", ActionType::USER_CREATED},
+            {"USER_UPDATED", ActionType::USER_UPDATED},
+            {"USER_DELETED", ActionType::USER_DELETED},
+            {"USER_ROLE_CHANGED", ActionType::USER_ROLE_CHANGED},
+            {"USER_PASSWORD_CHANGED", ActionType::USER_PASSWORD_CHANGED},
+            {"USER_STATUS_CHANGED", ActionType::USER_STATUS_CHANGED},
+            {"ROLE_CREATED", ActionType::ROLE_CREATED},
+            {"ROLE_UPDATED", ActionType::ROLE_UPDATED},
+            {"ROLE_DELETED", ActionType::ROLE_DELETED},
+            {"SYSTEM_LOGIN", ActionType::SYSTEM_LOGIN},
+            {"SYSTEM_LOGOUT", ActionType::SYSTEM_LOGOUT},
+            {"SYSTEM_BACKUP_CREATED", ActionType::SYSTEM_BACKUP_CREATED},
+            {"SYSTEM_BACKUP_RESTORED", ActionType::SYSTEM_BACKUP_RESTORED},
+            {"SYSTEM_SETTINGS_CHANGED", ActionType::SYSTEM_SETTINGS_CHANGED},
+            {"SECURITY_VIOLATION", ActionType::SECURITY_VIOLATION},
+            {"SECURITY_PASSWORD_RESET", ActionType::SECURITY_PASSWORD_RESET},
+            {"SECURITY_ACCESS_DENIED", ActionType::SECURITY_ACCESS_DENIED},
+            {"PROFILE_UPDATED", ActionType::PROFILE_UPDATED},
+            {"PROFILE_VIEWED", ActionType::PROFILE_VIEWED}
+        };
+        
+        auto it = action_map.find(action_str);
+        if (it != action_map.end()) {
+            return it->second;
+        }
+        return ActionType::SYSTEM_LOGIN; // значение по умолчанию
+    }
 };
 
-}
+} // namespace models

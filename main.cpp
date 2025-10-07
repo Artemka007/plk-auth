@@ -1,32 +1,66 @@
 #include <iostream>
-#include <pqxx/pqxx>
+#include <memory>
+#include <string>
+#include "database.hpp"
 
 int main() {
+    std::cout << "Starting C++ PostgreSQL Application...\n";
+    
     try {
-        // Connect to the database
-        // Replace with your PostgreSQL connection string
-        pqxx::connection c("dbname=myapp user=postgres password=q1w2e3r4 host=postgres_db port=5432");
-        std::cout << "Connected to " << c.dbname() << std::endl;
-
-        // Start a transaction
-        pqxx::work txn(c);
-
-        // Execute a query
-        pqxx::result r = txn.exec("SELECT version()");
-
-        // Print the result
-        for (const auto& row : r) {
-            for (const auto& field : row) {
-                std::cout << field.as<std::string>() << std::endl;
-            }
+        // Создаем подключение к базе данных
+        auto db = db::Database::create(
+            "postgres",  // host
+            5432,        // port
+            "myapp",     // database
+            "postgres",  // user
+            "password"   // password
+        );
+        
+        std::cout << "Database connection created successfully!\n";
+        
+        // Тестируем подключение
+        if (db->test_connection()) {
+            std::cout << "Database connection test: SUCCESS\n";
+        } else {
+            std::cout << "Database connection test: FAILED\n";
+            return 1;
         }
-
-        // Commit the transaction
-        txn.commit();
-    } catch (const std::exception &e) {
-        std::cerr << "Error: " << e.what() << std::endl;
-        std::cout << "Password: " << "aaaa" << std::endl;
+        
+        // Выводим информацию о подключении
+        std::cout << "Connection info: " << db->get_connection_info() << "\n";
+        
+        // Создаем таблицы (если они еще не созданы через init.sql)
+        std::cout << "Creating database schema...\n";
+        if (db->create_schema()) {
+            std::cout << "Database schema created successfully!\n";
+        } else {
+            std::cout << "Failed to create database schema\n";
+            // Не выходим с ошибкой, т.к. таблицы могли быть созданы через init.sql
+        }
+        
+        // Демонстрация транзакции
+        std::cout << "Testing transaction...\n";
+        try {
+            auto txn = db->begin_transaction();
+            std::cout << "Transaction started successfully\n";
+            txn->commit();
+            std::cout << "Transaction committed successfully\n";
+        } catch (const std::exception& e) {
+            std::cout << "Transaction test failed: " << e.what() << "\n";
+        }
+        
+        std::cout << "\nApplication started successfully!\n";
+        std::cout << "Press Ctrl+C to exit...\n";
+        
+        // Простой цикл чтобы приложение не завершалось сразу
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+        }
+        
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
         return 1;
     }
+    
     return 0;
 }

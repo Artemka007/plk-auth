@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 #include <string>
-#include <odb/database.hxx>
 #include "../models/user.hpp"
 #include "../models/user_role.hpp"
 
@@ -10,10 +9,10 @@ namespace dao {
 
 class UserDAO {
 private:
-    std::shared_ptr<odb::database> database_;
+    std::shared_ptr<pqxx::connection> connection_;
     
 public:
-    explicit UserDAO(std::shared_ptr<odb::database> db);
+    explicit UserDAO(std::shared_ptr<pqxx::connection> conn);
     
     // CRUD операции
     std::shared_ptr<models::User> find_by_id(const std::string& id);
