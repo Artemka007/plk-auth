@@ -330,19 +330,19 @@ std::string Database::get_connection_info() const {
 // Реализация DAOFactory
 DAOFactory::DAOFactory(std::shared_ptr<Database> db) : database_(std::move(db)) {}
 
-std::unique_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
+std::shared_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
     // Включаем заголовочный файл UserDAO перед использованием
-    return std::unique_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
+    return std::shared_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
 }
 
-std::unique_ptr<dao::LogDAO> DAOFactory::create_log_dao() {
+std::shared_ptr<dao::LogDAO> DAOFactory::create_log_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
     // Включаем заголовочный файл UserDAO перед использованием
-    return std::unique_ptr<dao::LogDAO>(new dao::LogDAO(database_->get_connection()));
+    return std::shared_ptr<dao::LogDAO>(new dao::LogDAO(database_->get_connection()));
 }
 } // namespace db

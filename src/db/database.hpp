@@ -56,8 +56,8 @@ private:
 public:
     explicit DAOFactory(std::shared_ptr<Database> db);
     
-    std::unique_ptr<dao::UserDAO> create_user_dao();
-    std::unique_ptr<dao::LogDAO> create_log_dao();
+    std::shared_ptr<dao::UserDAO> create_user_dao();
+    std::shared_ptr<dao::LogDAO> create_log_dao();
 };
 
 } // namespace db
