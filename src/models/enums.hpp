@@ -110,7 +110,7 @@ inline std::string to_string(AccessPermissionType permission) {
     return names.at(permission);
 }
 
-LogLevel string_to_log_level(const std::string& level_str) {
+inline LogLevel string_to_log_level(const std::string& level_str) {
     static const std::unordered_map<std::string, LogLevel> level_map = {
         {"DEBUG", LogLevel::DEBUG},
         {"INFO", LogLevel::INFO},
@@ -126,7 +126,7 @@ LogLevel string_to_log_level(const std::string& level_str) {
     return LogLevel::INFO; // значение по умолчанию
 }
 
-ActionType string_to_action_type(const std::string& action_str) {
+inline ActionType string_to_action_type(const std::string& action_str) {
     static const std::unordered_map<std::string, ActionType> action_map = {
         {"USER_CREATED", ActionType::USER_CREATED},
         {"USER_UPDATED", ActionType::USER_UPDATED},
