@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace dao {
-class LogDAO;
+    class LogDAO;
 }
 
 class LogService {
