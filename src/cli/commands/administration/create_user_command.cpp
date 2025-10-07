@@ -19,6 +19,7 @@ bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     }
 
     io_handler_->println("User created: " + user->email());
+    io_handler_->println("Temporary password: " + user)
     return true;
 }
 
