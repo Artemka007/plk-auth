@@ -62,7 +62,7 @@ bool UserService::is_admin(const std::shared_ptr<models::User>& user) const {
         return false;
     }
     
-    return user_dao_->has_role(user, "ADMIN");
+    return user_dao_->has_role(user, "admin");
 }
 
 bool UserService::can_manage_users(const std::shared_ptr<models::User>& user) const {
@@ -70,8 +70,8 @@ bool UserService::can_manage_users(const std::shared_ptr<models::User>& user) co
         return false;
     }
     
-    return user_dao_->has_role(user, "ADMIN") || 
-           user_dao_->has_role(user, "USER_MANAGER");
+    return user_dao_->has_role(user, "admin") || 
+           user_dao_->has_role(user, "user_manager");
 }
 
 bool UserService::has_role(const std::shared_ptr<models::User>& user, const std::string &role_name) const {
@@ -95,4 +95,22 @@ if (!user) {
     }
     
     return user->is_active();
+}
+
+std::vector<models::UserRole> UserService::user_roles(const std::string& email) {
+    auto user = user_dao_->find_by_email(email);
+    if (!user) {
+        return {};
+    }
+
+    auto role_ptrs = user_dao_->user_roles(user);
+    std::vector<models::UserRole> roles;
+
+    for (const auto& role_ptr : role_ptrs) {
+        if (role_ptr) {
+            roles.push_back(*role_ptr);
+        }
+    }
+
+    return roles;
 }

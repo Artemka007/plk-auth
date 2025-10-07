@@ -24,6 +24,7 @@ public:
     bool has_role(const std::shared_ptr<models::User> &user, const std::string &role_name) const;
     bool requires_password_change(const std::shared_ptr<models::User> &user) const;
     bool is_user_active(const std::shared_ptr<models::User> &user) const;
+    std::vector<models::UserRole> user_roles(const std::string& email) const;
 
 private:
     std::shared_ptr<dao::UserDao> user_dao_;
