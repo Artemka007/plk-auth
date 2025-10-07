@@ -1,6 +1,6 @@
-#include "cli/commands/administration/CreateUserCommand.hpp"
-#include "cli/IOHandler.hpp"
-#include "services/UserService.hpp"
+#include "cli/commands/administration/create_user_command.hpp"
+#include "cli/io_handler.hpp"
+#include "services/user_service.hpp"
 
 bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     if (args.size() != 3) {

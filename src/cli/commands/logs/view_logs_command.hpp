@@ -1,8 +1,8 @@
 #pragma once
 
-#include "cli/commands/BaseCommand.hpp"
+#include "cli/commands/base_command.hpp"
 
-class CreateUserCommand : public BaseCommand {
+class ViewLogsCommand : public BaseCommand {
 public:
     using BaseCommand::BaseCommand;
 
