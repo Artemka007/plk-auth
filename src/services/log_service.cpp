@@ -36,10 +36,10 @@ std::shared_ptr<models::SystemLog> LogService::create_log_entry(
         std::make_shared<models::SystemLog>(level, action_type, message);
 
     if (actor) {
-        entry->set_actor(odb::lazy_shared_ptr<models::User>(actor));
+        entry->set_actor_id((*actor).id());
     }
     if (subject) {
-        entry->set_subject(odb::lazy_shared_ptr<models::User>(subject));
+        entry->set_subject_id((*subject).id());
     }
     if (!ip_address.empty()) {
         entry->set_ip_address(ip_address);
@@ -143,16 +143,20 @@ LogService::get_logs_by_date_range(const std::string &start_date,
         return {};
     }
 
-    return get_logs_by_time_range(start_tp, end_tp, limit);
+    // return get_logs_by_time_range(start_tp, end_tp, limit);
+    return {};
 }
 
 bool LogService::cleanup_old_logs(int days_to_keep) {
-    std::chrono::time_point now = std::chrono::system_clock::now();
-    std::chrono::time_point days_to_substract =
-        std::chrono::hours(24 * days_to_keep);
-    std::chrono::time_point cutoff_time = now - days_to_substract;
-
-    return log_dao_->cleanup_old_logs(cutoff_time);
+    try {
+        auto now = std::chrono::system_clock::now();
+        auto cutoff_time = now - std::chrono::hours(24 * days_to_keep);
+        
+        return log_dao_->cleanup_old_logs(cutoff_time);
+    } catch (const std::exception& e) {
+        // Логирование ошибки
+        return false;
+    }
 }
 
 bool LogService::delete_logs(
