@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 #include "./db/database.hpp"
 
 int main() {

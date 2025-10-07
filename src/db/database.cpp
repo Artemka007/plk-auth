@@ -206,7 +206,7 @@ bool Database::backup(const std::string& backup_path) {
     try {
         // Получаем параметры подключения из connection string
         std::string host = connection_->hostname();
-        int port = connection_->port();
+        std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
         
@@ -217,7 +217,7 @@ bool Database::backup(const std::string& backup_path) {
         // Формируем команду pg_dump
         std::string command = "pg_dump";
         command += " -h " + host;
-        command += " -p " + std::to_string(port);
+        command += " -p " + port;
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -f " + backup_path;
@@ -264,7 +264,7 @@ bool Database::restore(const std::string& backup_path) {
         
         // Получаем параметры подключения
         std::string host = connection_->hostname();
-        int port = connection_->port();
+        std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
         std::string password = "password"; // Это нужно исправить в реальном приложении
@@ -272,7 +272,7 @@ bool Database::restore(const std::string& backup_path) {
         // Формируем команду pg_restore
         std::string command = "pg_restore";
         command += " -h " + host;
-        command += " -p " + std::to_string(port);
+        command += " -p " + port;
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -c"; // clean (drop) database objects before recreating
