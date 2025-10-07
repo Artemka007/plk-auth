@@ -1,10 +1,12 @@
 #include "cli/commands/administration/create_user_command.hpp"
 #include "cli/io_handler.hpp"
+#include "cli/app_state.hpp"
 #include "services/user_service.hpp"
 
 bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     if (args.size() != 3) {
-        io_handler_->error("Usage: create-user <email> <first_name> <last_name>");
+        io_handler_->error(
+            "Usage: create-user <email> <first_name> <last_name>");
         return false;
     }
 
@@ -12,18 +14,28 @@ bool CreateUserCommand::execute(const std::vector<std::string> &args) {
     const std::string &first_name = args[1];
     const std::string &last_name = args[2];
 
-    auto user = user_service_->create_user(first_name, last_name, email);
-    if (!user) {
-        io_handler_->error("Failed to create user");
+    CreateUserResult result =
+        user_service_->create_user(first_name, last_name, email);
+    if (!result.success) {
+        io_handler_->error("Failed to create user: " + result.message);
         return false;
     }
 
-    io_handler_->println("User created: " + user->email());
-    io_handler_->println("Temporary password: " + user)
+    auto current_user = app_state_->get_current_user();
+    log_service_->info(
+        ActionType::USER_CREATED,
+        "User created successfully: " + email,
+        current_user,
+        result.user
+    );
+
+    io_handler_->println("User created: " + result.user->email());
+    io_handler_->println("Temporary password: " + result.generated_password);
+
     return true;
 }
 
 bool CreateUserCommand::isVisible() const {
     auto current_user = app_state_->get_current_user();
-    return current_user && current_user->can_manage_users();
+    return current_user && user_service_->can_manage_users(current_user);
 }

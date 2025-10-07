@@ -1,6 +1,7 @@
 #pragma once
 
 #include "models/user.hpp"
+#include "models/user_role.hpp"
 #include <memory>
 #include <optional>
 #include <vector>
@@ -24,6 +25,7 @@ public:
     bool has_role(const std::shared_ptr<models::User> &user, const std::string &role_name) const;
     bool requires_password_change(const std::shared_ptr<models::User> &user) const;
     bool is_user_active(const std::shared_ptr<models::User> &user) const;
+    std::vector<std::shared_ptr<models::UserRole>> user_roles(const std::shared_ptr<models::User> &user) const;
 
 private:
     std::shared_ptr<dao::UserDao> user_dao_;
