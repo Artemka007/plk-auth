@@ -24,4 +24,4 @@ bool WhoAmICommand::execute(const std::vector<std::string> &args) {
     return true;
 }
 
-bool WhoAmICommand::isVisible() { return true; }
+bool WhoAmICommand::isVisible() const { return true; }

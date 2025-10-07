@@ -35,8 +35,8 @@ public:
     bool is_admin(const std::shared_ptr<const models::User> &user) const;
     bool can_manage_users(const std::shared_ptr<const models::User> &user) const;
     bool has_role(const std::shared_ptr<const models::User> &user, const std::string &role_name) const;
-    bool requires_password_change(const std::shared<const models::User> &user) const;
-    bool is_user_active(std::shared_ptr<const models::User> &user) const;
+    bool requires_password_change(const std::shared_ptr<const models::User> &user) const;
+    bool is_user_active(const std::shared_ptr<const models::User> &user) const;
     std::vector<std::shared_ptr<models::UserRole>> user_roles(const std::shared_ptr<const models::User> &user) const;
 
 private:

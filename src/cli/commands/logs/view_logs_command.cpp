@@ -1,9 +1,9 @@
 #include "view_logs_command.hpp"
 #include "src/cli/app_state.hpp"
 #include "src/cli/io_handler.hpp"
+#include "src/models/system_log.hpp"
 #include "src/services/log_service.hpp"
 #include "src/services/user_service.hpp"
-#include "src/models/system_log.hpp"
 
 bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     size_t logs_limit = 100;
@@ -40,8 +40,9 @@ bool ViewLogsCommand::execute(const std::vector<std::string> &args) {
     io_handler_->println("----------");
 
     for (const auto &log_entry : logs) {
-        io_handler_->println("[" + log_entry.timestamp + "] [" +
-                             log_entry.level + "] " + log_entry.message);
+        io_handler_->println("[" + log_entry->timestamp() + "] [" +
+                             models::to_string(log_entry->level()) + "] " +
+                             log_entry->message());
     }
 
     return true;
