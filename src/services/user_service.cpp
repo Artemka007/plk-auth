@@ -22,12 +22,16 @@ std::vector<models::User> UserService::get_all_users() {
 }
 
 bool UserService::create_user(const std::string& first_name, const std::string& last_name, const std::string& email) {
-    // TODO: Implement create_user
-    return true;
+    if (user_dao_->find_by_email(email) != nullptr) {
+        return false;
+    }
+    
+    auto new_user = std::make_shared<models::User>(first_name, last_name, email);
+    return user_dao_->save(new_user);
 }
 
 bool UserService::delete_user(const std::string& email) {
-        auto user = user_dao_->find_by_email(email);
+    auto user = user_dao_->find_by_email(email);
     if (!user) {
         return false;
     }
@@ -35,41 +39,60 @@ bool UserService::delete_user(const std::string& email) {
 }
 
 bool UserService::add_role_to_user(const std::string& email, const models::UserRole role) {
-    // TODO: Implement add_role_to_user
-    return true;
+    auto user = user_dao_->find_by_email(email);
+    if (!user) {
+        return false;
+    }
+    
+    return user_dao_->assign_role(user, role);
 }
 
 bool UserService::remove_role_from_user(const std::string& email, const models::UserRole role) {
-    // TODO: Implement remove_role_from_user
-    return true;
+    auto user_ptr = user_dao_->find_by_email(email);
+    if (!user_ptr) {
+        return false;
+    }
+
+    auto role_ptr = std::make_shared<models::UserRole>(role);
+    return user_dao_->remove_role(user_ptr, role_ptr);
 }
 
 bool UserService::is_admin(const std::shared_ptr<models::User>& user) const {
-    // TODO: Implement is_admin
-    if (!user) return false;
-    return false;
+    if (!user) {
+        return false;
+    }
+    
+    return user_dao_->has_role(user, "ADMIN");
 }
 
 bool UserService::can_manage_users(const std::shared_ptr<models::User>& user) const {
-    // TODO: Implement can_manage_users
-    if (!user) return false;
-    return false;
+   if (!user) {
+        return false;
+    }
+    
+    return user_dao_->has_role(user, "ADMIN") || 
+           user_dao_->has_role(user, "USER_MANAGER");
 }
 
 bool UserService::has_role(const std::shared_ptr<models::User>& user, const std::string &role_name) const {
-    // TODO: Implement has_role
-    if (!user) return false;
-    return false;
+    if (!user || role_name.empty()) {
+        return false;
+    }
+    
+    return user_dao_->has_role(user, role_name);
 }
 
 bool UserService::requires_password_change(const std::shared_ptr<models::User> &user) const {
-    // TODO: Implement requires_password_change
-    if (!user) return false;
-    return false;
+    if (!user) {
+        return false;
+    }
+    return user->password_change_required();
 }
 
 bool UserService::is_user_active(const std::shared_ptr<models::User> &user) const {
-    // TODO: Implement is_user_active
-    if (!user) return false;
-    return false;
+if (!user) {
+        return false;
+    }
+    
+    return user->is_active();
 }
