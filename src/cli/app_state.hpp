@@ -10,12 +10,10 @@ class User;
 
 class AppState {
 public:
-    // Setters
     void set_current_user(const std::shared_ptr<const models::User> &user);
     void set_running(bool running);
     void add_to_history(std::string command);
 
-    // Getters
     std::vector<std::string> get_history() const;
     std::shared_ptr<const models::User> get_current_user() const;
     bool is_authenticated() const;

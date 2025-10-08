@@ -32,10 +32,10 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "whoami",
-        [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
+        [](auto app_state, auto io, auto auth, auto user_svc, auto log, auto d) {
             return std::make_unique<WhoAmICommand>(
                 "whoami", "Print short information about yourself",
-                "whoami (no arguments)", app_state, io, auth, user_svc, log);
+                "whoami (no arguments)", app_state, io, auth, user_svc, log, d);
         });
     return true;
 }();

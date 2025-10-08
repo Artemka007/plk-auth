@@ -17,7 +17,6 @@ public:
         , message_(std::move(message)) {
     }
     
-    // Геттеры
     const std::string& id() const { return id_; }
     LogLevel level() const { return level_; }
     ActionType action_type() const { return action_type_; }
@@ -29,7 +28,6 @@ public:
     const std::optional<std::string>& ip_address() const { return ip_address_; }
     const std::optional<std::string>& user_agent() const { return user_agent_; }
     
-    // Сеттеры
     void set_id(const std::string& id) { id_ = id; }
     void set_level(LogLevel level) { level_ = level; }
     void set_action_type(ActionType action_type) { action_type_ = action_type; }
@@ -40,7 +38,6 @@ public:
     void set_ip_address(const std::optional<std::string>& ip) { ip_address_ = ip; }
     void set_user_agent(const std::optional<std::string>& agent) { user_agent_ = agent; }
 
-    // Вспомогательные методы
     std::string level_string() const {
         return to_string(level_);
     }
@@ -49,7 +46,6 @@ public:
         return to_string(action_type_);
     }
     
-    // Сериализация для вставки
     std::vector<std::string> get_insert_values() const {
         return {
             id_,
@@ -63,11 +59,9 @@ public:
         };
     }
 
-    // Десериализация из pqxx
     void from_row(const pqxx::row& row) {
         id_ = row["id"].as<std::string>();
         
-        // Преобразуем строку обратно в enum
         std::string level_str = row["level"].as<std::string>();
         level_ = string_to_log_level(level_str);
         
@@ -77,7 +71,6 @@ public:
         message_ = row["message"].as<std::string>();
         timestamp_ = row["timestamp"].as<std::string>();
         
-        // Обработка nullable полей
         if (!row["actor_id"].is_null()) {
             actor_id_ = row["actor_id"].as<std::string>();
         } else {
@@ -109,10 +102,10 @@ private:
     ActionType action_type_;
     std::string message_;
     std::string timestamp_;
-    std::string actor_id_;      // ID пользователя-исполнителя действия
-    std::string subject_id_;    // ID пользователя-объекта действия
+    std::string actor_id_;
+    std::string subject_id_;
     std::optional<std::string> ip_address_;
     std::optional<std::string> user_agent_;
 };
 
-} // namespace models
+}

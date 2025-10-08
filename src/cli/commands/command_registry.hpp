@@ -14,12 +14,13 @@ namespace services {
 class AuthService;
 class UserService;
 class LogService;
+class DataExportImportService;
 }
 
 using CommandFactoryFn = std::function<std::unique_ptr<BaseCommand>(
     std::shared_ptr<AppState>, std::shared_ptr<IOHandler>,
     std::shared_ptr<services::AuthService>, std::shared_ptr<services::UserService>,
-    std::shared_ptr<services::LogService>)>;
+    std::shared_ptr<services::LogService>, std::shared_ptr<services::DataExportImportService>)>;
 
 class CommandRegistry {
 public:
@@ -34,11 +35,12 @@ public:
         std::shared_ptr<IOHandler> io_handler,
         std::shared_ptr<services::AuthService> auth_service,
         std::shared_ptr<services::UserService> user_service,
-        std::shared_ptr<services::LogService> log_service)
+        std::shared_ptr<services::LogService> log_service,
+        std::shared_ptr<services::DataExportImportService> data_export_import_service)
     {
         std::vector<std::unique_ptr<BaseCommand>> commands;
         for (auto &[name, factory] : get_registry()) {
-            commands.push_back(factory(app_state, io_handler, auth_service, user_service, log_service));
+            commands.push_back(factory(app_state, io_handler, auth_service, user_service, log_service, data_export_import_service));
         }
 
         // Automatically populate HelpCommand

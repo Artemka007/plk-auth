@@ -44,11 +44,11 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "add-role",
-        [](auto app_state, auto io, auto auth, auto user, auto log) {
+        [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<AddRoleCommand>(
                 "add-role", "Assign a role to a user",
-                "add-role <email> <role_name>", app_state, io, auth, user, log);
+                "add-role <email> <role_name>", app_state, io, auth, user, log, d);
         });
     return true;
 }();
-} // namespace
+}

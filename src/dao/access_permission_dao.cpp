@@ -103,10 +103,8 @@ bool AccessPermissionDAO::remove(const std::string& id) {
     try {
         pqxx::work txn(*connection_);
         
-        // Сначала удаляем связи с ролями
         txn.exec("DELETE FROM role_permission WHERE permission_id = " + txn.quote(id));
         
-        // Затем удаляем само разрешение
         txn.exec("DELETE FROM access_permission WHERE id = " + txn.quote(id));
         
         txn.commit();
@@ -119,7 +117,6 @@ bool AccessPermissionDAO::remove(const std::string& id) {
 
 bool AccessPermissionDAO::assign_permission_to_role(const std::string& role_id, const std::string& permission_id) {
     try {
-        // Проверяем, не назначено ли уже это разрешение роли
         pqxx::work txn(*connection_);
         auto existing = txn.exec(
             "SELECT COUNT(*) FROM role_permission WHERE role_id = " + txn.quote(role_id) + 
@@ -201,7 +198,6 @@ bool AccessPermissionDAO::role_has_permission(const std::string& role_id, const 
 
 void AccessPermissionDAO::initialize_system_permissions() {
     try {
-        // Список системных разрешений
         std::vector<std::pair<std::string, std::string>> system_permissions = {
             {"USER_CREATE", "Create new users"},
             {"USER_READ", "View users"},
@@ -226,7 +222,6 @@ void AccessPermissionDAO::initialize_system_permissions() {
         
         pqxx::work txn(*connection_);
         
-        // Создаем системные разрешения
         for (const auto& [name, description] : system_permissions) {
             auto permission_id = utils::UUIDGenerator::generate_uuid();
             
@@ -240,7 +235,6 @@ void AccessPermissionDAO::initialize_system_permissions() {
             );
         }
         
-        // Создаем системные роли если их нет
         txn.exec(
             "INSERT INTO user_role (id, name, description, is_system) VALUES "
             "('role-admin', 'ADMIN', 'System Administrator', true), "
@@ -248,7 +242,6 @@ void AccessPermissionDAO::initialize_system_permissions() {
             "ON CONFLICT (id) DO NOTHING"
         );
         
-        // Назначаем все разрешения роли ADMIN
         for (const auto& [name, description] : system_permissions) {
             txn.exec(
                 "INSERT INTO role_permission (role_id, permission_id) "
@@ -257,7 +250,6 @@ void AccessPermissionDAO::initialize_system_permissions() {
             );
         }
         
-        // Назначаем базовые разрешения роли USER
         std::vector<std::string> user_permissions = {
             "USER_READ", "ROLE_READ", "LOG_READ"
         };

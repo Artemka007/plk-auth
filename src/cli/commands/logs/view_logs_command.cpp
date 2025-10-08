@@ -63,10 +63,10 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "view-logs",
-        [](auto app_state, auto io, auto auth, auto user, auto log) {
+        [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<ViewLogsCommand>(
-                "view-logs", "Show recent system logs", "view-logs [limit]",
-                app_state, io, auth, user, log);
+                "view-logs", "Show recent system logs", "view-logs [limit], auto d",
+                app_state, io, auth, user, log, d);
         });
     return true;
 }();

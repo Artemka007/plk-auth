@@ -48,7 +48,6 @@ public:
                   const std::string &ip_address = "",
                   const std::string &user_agent = "");
 
-    // Logs Receive
     std::vector<std::shared_ptr<models::SystemLog>>
     get_recent_logs(size_t limit = 100);
 
@@ -68,11 +67,9 @@ public:
     get_logs_by_date_range(const std::string &start_date,
                            const std::string &end_date, size_t limit);
 
-    // Logs management
     bool cleanup_old_logs(int days_to_keep = 30);
     bool delete_logs(const std::vector<std::shared_ptr<models::SystemLog>> &logs);
 
-    // Logs stats
     size_t get_total_log_count();
 
 private:

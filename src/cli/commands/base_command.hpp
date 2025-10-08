@@ -5,6 +5,7 @@
 #include "src/services/auth_service.hpp"
 #include "src/services/log_service.hpp"
 #include "src/services/user_service.hpp"
+#include "src/services/data_export_import_service.hpp"
 #include "validation_result.hpp"
 #include <memory>
 #include <string>
@@ -17,13 +18,15 @@ public:
                 std::shared_ptr<IOHandler> io_handler,
                 std::shared_ptr<services::AuthService> auth_service,
                 std::shared_ptr<services::UserService> user_service,
-                std::shared_ptr<services::LogService> log_service)
+                std::shared_ptr<services::LogService> log_service,
+                std::shared_ptr<services::DataExportImportService> data_export_import_service)
         : name_(std::move(name)), description_(std::move(description)),
           usage_(std::move(usage)), app_state_(std::move(app_state)),
           io_handler_(std::move(io_handler)),
           auth_service_(std::move(auth_service)),
           user_service_(std::move(user_service)),
-          log_service_(std::move(log_service)) {}
+          log_service_(std::move(log_service)),
+          data_export_import_service_(std::move(data_export_import_service)) {}
 
     virtual ~BaseCommand() = default;
 
@@ -43,6 +46,7 @@ protected:
     const std::shared_ptr<services::AuthService> auth_service_;
     const std::shared_ptr<services::UserService> user_service_;
     const std::shared_ptr<services::LogService> log_service_;
+    const std::shared_ptr<services::DataExportImportService> data_export_import_service_;
 
 private:
     const std::string name_;

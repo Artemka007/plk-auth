@@ -143,7 +143,6 @@ LogService::get_logs_by_date_range(const std::string &start_date,
         return {};
     }
 
-    // return get_logs_by_time_range(start_tp, end_tp, limit);
     return {};
 }
 
@@ -154,7 +153,6 @@ bool LogService::cleanup_old_logs(int days_to_keep) {
         
         return log_dao_->cleanup_old_logs(cutoff_time);
     } catch (const std::exception& e) {
-        // Логирование ошибки
         return false;
     }
 }

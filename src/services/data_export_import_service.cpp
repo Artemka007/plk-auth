@@ -24,7 +24,7 @@ bool DataExportImportService::export_data(const std::string& file_path, const st
                           "Starting data export to: " + file_path,
                           actor, nullptr);
         
-        bool result = export_import_dao_->export_to_file(file_path);
+        bool result = export_import_dao_->export_users_to_csv(file_path);
         if (result) {
             io_handler_->println("✅ Data exported successfully");
             log_service_->info(models::ActionType::SYSTEM_EXPORT,

@@ -55,7 +55,6 @@ enum class AccessPermissionType {
     PASSWORD_CHANGE
 };
 
-// Вспомогательные функции для enum'ов
 inline std::string to_string(LogLevel level) {
     static const std::unordered_map<LogLevel, std::string> names = {
         {LogLevel::DEBUG, "DEBUG"},
@@ -129,7 +128,7 @@ inline LogLevel string_to_log_level(const std::string& level_str) {
     if (it != level_map.end()) {
         return it->second;
     }
-    return LogLevel::INFO; // значение по умолчанию
+    return LogLevel::INFO;
 }
 
 inline ActionType string_to_action_type(const std::string& action_str) {
@@ -162,7 +161,59 @@ inline ActionType string_to_action_type(const std::string& action_str) {
     if (it != action_map.end()) {
         return it->second;
     }
-    return ActionType::SYSTEM_LOGIN; // значение по умолчанию
+    return ActionType::SYSTEM_LOGIN; 
 }
+
+
+
+inline std::optional<LogLevel> string_to_log_level_optional(const std::string& level_str) {
+    static const std::unordered_map<std::string, LogLevel> level_map = {
+        {"DEBUG", LogLevel::DEBUG},
+        {"INFO", LogLevel::INFO},
+        {"WARNING", LogLevel::WARNING},
+        {"ERROR", LogLevel::ERROR},
+        {"CRITICAL", LogLevel::CRITICAL}
+    };
+    
+    auto it = level_map.find(level_str);
+    if (it != level_map.end()) {
+        return it->second;
+    }
+    return std::nullopt;
+}
+
+inline std::optional<ActionType> string_to_action_type_optional(const std::string& action_str) {
+    static const std::unordered_map<std::string, ActionType> action_map = {
+        {"USER_CREATED", ActionType::USER_CREATED},
+        {"USER_UPDATED", ActionType::USER_UPDATED},
+        {"USER_DELETED", ActionType::USER_DELETED},
+        {"USER_ROLE_CHANGED", ActionType::USER_ROLE_CHANGED},
+        {"USER_PASSWORD_CHANGED", ActionType::USER_PASSWORD_CHANGED},
+        {"USER_STATUS_CHANGED", ActionType::USER_STATUS_CHANGED},
+        {"ROLE_CREATED", ActionType::ROLE_CREATED},
+        {"ROLE_UPDATED", ActionType::ROLE_UPDATED},
+        {"ROLE_DELETED", ActionType::ROLE_DELETED},
+        {"SYSTEM_LOGIN", ActionType::SYSTEM_LOGIN},
+        {"SYSTEM_LOGOUT", ActionType::SYSTEM_LOGOUT},
+        {"SYSTEM_BACKUP_CREATED", ActionType::SYSTEM_BACKUP_CREATED},
+        {"SYSTEM_BACKUP_RESTORED", ActionType::SYSTEM_BACKUP_RESTORED},
+        {"SYSTEM_SETTINGS_CHANGED", ActionType::SYSTEM_SETTINGS_CHANGED},
+        {"SECURITY_VIOLATION", ActionType::SECURITY_VIOLATION},
+        {"SECURITY_PASSWORD_RESET", ActionType::SECURITY_PASSWORD_RESET},
+        {"SECURITY_ACCESS_DENIED", ActionType::SECURITY_ACCESS_DENIED},
+        {"PROFILE_UPDATED", ActionType::PROFILE_UPDATED},
+        {"PROFILE_VIEWED", ActionType::PROFILE_VIEWED},
+        {"SYSTEM_IMPORT", ActionType::SYSTEM_IMPORT},
+        {"SYSTEM_EXPORT", ActionType::SYSTEM_EXPORT},
+        {"SYSTEM_STARTUP", ActionType::SYSTEM_STARTUP}
+    };
+    
+    auto it = action_map.find(action_str);
+    if (it != action_map.end()) {
+        return it->second;
+    }
+    return std::nullopt; 
+}
+
 
 }

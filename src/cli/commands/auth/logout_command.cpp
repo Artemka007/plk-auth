@@ -41,10 +41,10 @@ bool LogoutCommand::is_visible() const {
 namespace {
 bool registered = []() {
     CommandRegistry::register_command(
-        "logout", [](auto app_state, auto io, auto auth, auto user, auto log) {
+        "logout", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<LogoutCommand>(
                 "logout", "Log out of the application", "logout (no arguments)",
-                app_state, io, auth, user, log);
+                app_state, io, auth, user, log, d);
         });
     return true;
 }();

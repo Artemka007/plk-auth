@@ -14,7 +14,6 @@ AuthService::AuthService(std::shared_ptr<dao::UserDAO> user_dao, std::shared_ptr
 
 LoginResult AuthService::login(const std::string &email,
                                const std::string &password) {
-    // Find user by email
     std::shared_ptr<models::User> user = user_dao_->find_by_email(email);
     if (!user) {
         log_service_->error(models::ActionType::SYSTEM_LOGIN, 
@@ -23,7 +22,6 @@ LoginResult AuthService::login(const std::string &email,
         return {false, nullptr, false, "User not found"};
     }
 
-    // Check if user is not active
     if (!user->is_active()) {
         log_service_->warning(models::ActionType::SECURITY_ACCESS_DENIED,
                              "Login attempt to inactive account: " + email,
@@ -31,7 +29,6 @@ LoginResult AuthService::login(const std::string &email,
         return {false, nullptr, false, "Account is inactive"};
     }
 
-    // Check password
     if (!utils::PasswordUtils::verify_password_pbkdf2(password,
                                                       user->password_hash())) {
         log_service_->warning(models::ActionType::SECURITY_ACCESS_DENIED,
@@ -40,7 +37,6 @@ LoginResult AuthService::login(const std::string &email,
         return {false, nullptr, false, "Invalid credentials"};
     }
 
-    // Check if password change is required
     if (user->is_password_change_required()) {
         log_service_->info(models::ActionType::SYSTEM_LOGIN,
                           "User login successful - password change required: " + email,
@@ -48,7 +44,6 @@ LoginResult AuthService::login(const std::string &email,
         return {true, user, true, ""};
     }
 
-    // Success
     log_service_->info(models::ActionType::SYSTEM_LOGIN,
                       "User login successful: " + email,
                       user, nullptr, "192.168.1.100", "CLI Client");
@@ -88,7 +83,6 @@ bool AuthService::change_password(const std::string &email,
                                   const std::string &old_password,
                                   const std::string &new_password) {
     try {
-        // Аутентифицируем пользователя
         if (!authenticate(email, old_password)) {
             log_service_->warning(models::ActionType::SECURITY_PASSWORD_RESET,
                                 "Password change failed - authentication failed: " + email,
@@ -104,7 +98,6 @@ bool AuthService::change_password(const std::string &email,
             return false;
         }
 
-        // Проверяем силу нового пароля
         if (!utils::PasswordUtils::is_password_strong(new_password)) {
             log_service_->warning(models::ActionType::SECURITY_PASSWORD_RESET,
                                 "Password change failed - weak password: " + email,
@@ -112,11 +105,9 @@ bool AuthService::change_password(const std::string &email,
             return false;
         }
 
-        // Хешируем новый пароль
         std::string new_password_hash =
             utils::PasswordUtils::hash_password_pbkdf2(new_password);
 
-        // Обновляем пароль в базе данных
         bool success = user_dao_->change_password(user, new_password_hash);
         if (success) {
             log_service_->info(models::ActionType::USER_PASSWORD_CHANGED,
@@ -148,7 +139,6 @@ bool AuthService::change_password(const std::string &email,
             return false;
         }
 
-        // Проверяем силу нового пароля
         if (!utils::PasswordUtils::is_password_strong(new_password)) {
             log_service_->warning(models::ActionType::SECURITY_PASSWORD_RESET,
                                 "Admin password reset failed - weak password: " + email,
@@ -156,11 +146,9 @@ bool AuthService::change_password(const std::string &email,
             return false;
         }
 
-        // Хешируем новый пароль
         std::string new_password_hash =
             utils::PasswordUtils::hash_password_pbkdf2(new_password);
 
-        // Обновляем пароль в базе данных
         bool success = user_dao_->change_password(user, new_password_hash);
         if (success) {
             log_service_->info(models::ActionType::SECURITY_PASSWORD_RESET,

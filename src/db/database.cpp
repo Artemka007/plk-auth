@@ -260,23 +260,20 @@ bool Database::restore(const std::string& backup_path) {
             return false;
         }
         
-        // Получаем параметры подключения
         std::string host = connection_->hostname();
         std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
         std::string password = "password"; // Это нужно исправить в реальном приложении
         
-        // Формируем команду pg_restore
         std::string command = "pg_restore";
         command += " -h " + host;
         command += " -p " + port;
         command += " -U " + user;
         command += " -d " + dbname;
-        command += " -c"; // clean (drop) database objects before recreating
+        command += " -c"; 
         command += " " + backup_path;
         
-        // Устанавливаем переменную окружения с паролем
         #ifdef _WIN32
             _putenv_s("PGPASSWORD", password.c_str());
         #else
@@ -285,10 +282,8 @@ bool Database::restore(const std::string& backup_path) {
         
         std::cout << "Restoring from backup: " << backup_path << std::endl;
         
-        // Выполняем команду
         int result = std::system(command.c_str());
         
-        // Очищаем переменную окружения
         #ifdef _WIN32
             _putenv_s("PGPASSWORD", "");
         #else

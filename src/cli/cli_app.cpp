@@ -24,7 +24,7 @@ CliApp::CliApp(std::shared_ptr<services::UserService> user_service,
 
 void CliApp::initialize_commands() {
     commands_ = CommandRegistry::create_all_commands(
-        app_state_, io_handler_, auth_service_, user_service_, log_service_);
+        app_state_, io_handler_, auth_service_, user_service_, log_service_, data_export_import_service_);
 
     command_map_.clear();
     for (auto &cmd : commands_) {
@@ -76,7 +76,6 @@ void CliApp::execute_command(const std::string &input) {
         return;
     }
 
-    // Validate arguments before execution
     ValidationResult result = cmd->validate_args(args);
     if (!result.valid) {
         io_handler_->error(result.error_message);

@@ -19,7 +19,6 @@ bool DeleteUserCommand::execute(const CommandArgs &args) {
         return false;
     }
 
-    // Request confirmation
     io_handler_->print("Are you sure you want to delete user " + target_email +
                        "? This action cannot be undone. (y/N): ");
     std::string confirmation = io_handler_->read_line();
@@ -30,14 +29,12 @@ bool DeleteUserCommand::execute(const CommandArgs &args) {
         return true;
     }
 
-    // Prevent self-deletion
     auto current_user = app_state_->get_current_user();
     if (current_user && current_user->email() == target_email) {
         io_handler_->error("You cannot delete yourself");
         return false;
     }
 
-    // Delete user
     if (user_service_->delete_user(target_email, current_user)) {
         io_handler_->println("User deleted: " + target_email);
         return true;
@@ -56,11 +53,11 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "delete-user",
-        [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
+        [](auto app_state, auto io, auto auth, auto user_svc, auto log, auto d) {
             return std::make_unique<DeleteUserCommand>(
                 "delete-user", "Delete an existing user", "delete-user <email>",
-                app_state, io, auth, user_svc, log);
+                app_state, io, auth, user_svc, log, d);
         });
     return true;
 }();
-} // namespace
+}

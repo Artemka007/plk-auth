@@ -19,10 +19,10 @@ bool ExitCommand::execute(const CommandArgs &args) {
 namespace {
 bool registered = []() {
     CommandRegistry::register_command(
-        "exit", [](auto app_state, auto io, auto auth, auto user, auto log) {
+        "exit", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<ExitCommand>(
-                "exit", "Exit the application", "exit (no arguments)",
-                app_state, io, auth, user, log);
+                "exit", "Exit the application", "exit (no arguments), auto d",
+                app_state, io, auth, user, log, d);
         });
     return true;
 }();

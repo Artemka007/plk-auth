@@ -17,7 +17,6 @@ public:
         , password_change_required_(true) {
     }
 
-    // Геттеры
     const std::string& id() const { return id_; }
     const std::string& first_name() const { return first_name_; }
     const std::string& last_name() const { return last_name_; }
@@ -31,7 +30,6 @@ public:
     const std::string& updated_at() const { return updated_at_; }
     const std::optional<std::string>& last_login_at() const { return last_login_at_; }
     
-    // Сеттеры
     void set_id(const std::string& id) { id_ = id; }
     void set_first_name(const std::string& name) { first_name_ = name; }
     void set_last_name(const std::string& name) { last_name_ = name; }
@@ -46,7 +44,6 @@ public:
     void require_password_change() { password_change_required_ = true; }
     void set_last_login_at(const std::optional<std::string>& timestamp) { last_login_at_ = timestamp; }
 
-    // Вспомогательные методы
     std::string full_name() const {
         if (!patronymic_.has_value()) {
             return first_name_ + " " + last_name_;
@@ -54,7 +51,6 @@ public:
         return first_name_ + " " + patronymic_.value() + " " + last_name_;
     }
 
-    // Сериализация для вставки
     std::vector<std::string> get_insert_values() const {
         return {
             id_, first_name_, last_name_, 
@@ -67,7 +63,6 @@ public:
         };
     }
 
-    // Десериализация из pqxx
     void from_row(const pqxx::row& row) {
         id_ = row["id"].as<std::string>();
         first_name_ = row["first_name"].as<std::string>();
@@ -109,4 +104,4 @@ private:
     std::optional<std::string> last_login_at_;
 };
 
-} // namespace models
+}

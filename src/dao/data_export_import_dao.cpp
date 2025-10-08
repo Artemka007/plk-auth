@@ -120,7 +120,15 @@ bool DataExportImportDAO::export_users_to_csv(const std::string& file_path) {
             ") TO STDOUT WITH CSV HEADER";
         
         std::ofstream file(file_path);
-        auto result = txn.exec(export_sql);
+        
+        file << "id,first_name,last_name,patronymic,email,phone,is_active,"
+             << "password_change_required,created_at,last_login_at\n";
+        
+        auto result = txn.exec(
+            "SELECT id, first_name, last_name, patronymic, email, phone, "
+            "is_active, password_change_required, created_at, last_login_at "
+            "FROM app_user ORDER BY created_at DESC"
+        );
         
         for (const auto& row : result) {
             file << row["id"].as<std::string>() << ","

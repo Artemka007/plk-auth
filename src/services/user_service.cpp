@@ -18,19 +18,15 @@ UserService::UserService(
     : io_handler_(std::move(io_handler)), user_dao_(std::move(user_dao)),
       permission_dao_(std::move(permission_dao)), log_service_(std::move(log_service)) {}
 
-// Инициализация системы
 void UserService::initialize_system() {
     try {
         io_handler_->println("Initializing system...");
         log_service_->info(models::ActionType::SYSTEM_STARTUP, "Starting system initialization");
 
-        // 1. Инициализируем системные разрешения и роли
         permission_dao_->initialize_system_permissions();
 
-        // 2. Создаем системные роли (если нужно)
         create_system_roles();
 
-        // 3. Создаем администратора по умолчанию
         if (create_default_admin()) {
             io_handler_->println("System initialization completed successfully");
             log_service_->info(models::ActionType::SYSTEM_STARTUP, "System initialization completed successfully");
@@ -48,8 +44,7 @@ void UserService::initialize_system() {
 
 bool UserService::create_default_admin() {
     try {
-        // Проверяем, не существует ли уже администратор
-        auto existing_admin = user_dao_->find_by_email("admin@system.local");
+        auto existing_admin = user_dao_->find_by_email("admin@sys.local");
         if (existing_admin) {
             io_handler_->println("ℹ️ System administrator already exists");
             log_service_->debug(models::ActionType::USER_CREATED, "System administrator already exists");
@@ -59,11 +54,9 @@ bool UserService::create_default_admin() {
         io_handler_->println("👑 Creating system administrator...");
         log_service_->info(models::ActionType::USER_CREATED, "Creating system administrator account");
 
-        // Создаем администратора
         auto admin_user = std::make_shared<models::User>(
-            "System", "Administrator", "admin@system.local");
+            "System", "Administrator", "admin@sys.local");
 
-        // Генерируем случайный пароль
         std::string password =
             utils::PasswordUtils::generate_random_password(12);
         std::string password_hash =
@@ -79,7 +72,6 @@ bool UserService::create_default_admin() {
             return false;
         }
 
-        // Назначаем роль администратора
         auto admin_role = get_role_by_name("ADMIN");
         if (!admin_role) {
             io_handler_->error("❌ ADMIN role not found");
@@ -93,11 +85,10 @@ bool UserService::create_default_admin() {
             return false;
         }
 
-        // Выводим информацию для администратора
         io_handler_->println("==========================================");
         io_handler_->println("🎯 SYSTEM ADMINISTRATOR CREATED");
         io_handler_->println("==========================================");
-        io_handler_->println("📧 Email: admin@system.local");
+        io_handler_->println("📧 Email: admin@sys.local");
         io_handler_->println("🔑 Password: " + password);
         io_handler_->println("⚠️  Please change password after first login!");
         io_handler_->println("==========================================");
@@ -126,14 +117,12 @@ bool UserService::create_system_roles() {
     }
 }
 
-// Обновленный метод создания пользователя с поддержкой ролей
 CreateUserResult UserService::create_user(const std::string &first_name,
                                           const std::string &last_name,
                                           const std::string &email,
                                           const std::string &role_name,
                                           const std::shared_ptr<const models::User>& actor) {
     try {
-        // Если пользователь с таким email уже существует
         if (user_dao_->find_by_email(email) != nullptr) {
             log_service_->warning(models::ActionType::USER_CREATED, 
                                  "User creation failed - email already exists: " + email,
@@ -144,7 +133,6 @@ CreateUserResult UserService::create_user(const std::string &first_name,
         auto new_user =
             std::make_shared<models::User>(first_name, last_name, email);
 
-        // Генерируем случайный пароль
         std::string user_password =
             utils::PasswordUtils::generate_random_password(12);
         std::string password_hash =
@@ -161,7 +149,6 @@ CreateUserResult UserService::create_user(const std::string &first_name,
             return {false, "Failed to save user to database", nullptr, ""};
         }
 
-        // Назначаем роль пользователю
         auto role = get_role_by_name(role_name);
         if (role) {
             if (!user_dao_->assign_role(new_user, role)) {
@@ -185,7 +172,6 @@ CreateUserResult UserService::create_user(const std::string &first_name,
                           "User created successfully: " + email + " with role: " + role_name,
                           actor, new_user);
 
-        // Успех
         return {true, "User created successfully", new_user, user_password};
 
     } catch (const std::exception &e) {
@@ -197,7 +183,6 @@ CreateUserResult UserService::create_user(const std::string &first_name,
     }
 }
 
-// Новые методы для проверки разрешений
 bool UserService::has_permission(
     const std::shared_ptr<const models::User> &user,
     const std::string &permission_name) const {
@@ -205,11 +190,9 @@ bool UserService::has_permission(
         return false;
     }
 
-    // Получаем роли пользователя
     auto non_const_user = std::const_pointer_cast<models::User>(user);
     auto roles = user_dao_->user_roles(non_const_user);
 
-    // Проверяем каждую роль на наличие разрешения
     for (const auto &role : roles) {
         if (permission_dao_->role_has_permission(role->id(), permission_name)) {
             return true;
@@ -238,7 +221,6 @@ std::vector<std::string> UserService::get_user_permissions(
         }
     }
 
-    // Убираем дубликаты
     std::sort(permissions.begin(), permissions.end());
     permissions.erase(std::unique(permissions.begin(), permissions.end()),
                       permissions.end());
@@ -360,7 +342,6 @@ bool UserService::can_manage_users(const std::shared_ptr<const models::User> &us
         return false;
     }
 
-    // Используем новую систему разрешений
     return has_permission(user, "USER_CREATE") ||
            has_permission(user, "USER_UPDATE") ||
            has_permission(user, "USER_DELETE");
@@ -400,4 +381,4 @@ UserService::user_roles(const std::shared_ptr<const models::User> &user) const {
     return user_dao_->user_roles(non_const_user);
 }
 
-} // namespace services
+}

@@ -25,17 +25,14 @@ public:
     void Stop();
 
 private:
-    // Domain dependencies
     std::shared_ptr<services::UserService> user_service_;
     std::shared_ptr<services::AuthService> auth_service_;
     std::shared_ptr<services::LogService> log_service_;
     std::shared_ptr<services::DataExportImportService> data_export_import_service_;
 
-    // Cli-specific dependencies
     std::shared_ptr<IOHandler> io_handler_;
     std::shared_ptr<AppState> app_state_;
 
-    // Commands
     std::vector<std::unique_ptr<BaseCommand>> commands_;
     std::unordered_map<std::string, BaseCommand *> command_map_;
 

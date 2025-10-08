@@ -44,10 +44,10 @@ bool HelpCommand::is_visible() const { return true; }
 namespace {
 bool registered = []() {
     CommandRegistry::register_command(
-        "help", [](auto app_state, auto io, auto auth, auto user, auto log) {
+        "help", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<HelpCommand>(
                 "help", "Show help", "help [command]", app_state, io, auth,
-                user, log);
+                user, log, d);
         });
     return true;
 }();

@@ -44,12 +44,12 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "create-user",
-        [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
+        [](auto app_state, auto io, auto auth, auto user_svc, auto log, auto d) {
             return std::make_unique<CreateUserCommand>(
                 "create-user", "Create a new user",
                 "create-user <email> <first_name> <last_name>",
-                app_state, io, auth, user_svc, log);
+                app_state, io, auth, user_svc, log, d);
         });
     return true;
 }();
-} // namespace
+}

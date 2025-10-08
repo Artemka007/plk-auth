@@ -43,12 +43,12 @@ namespace {
 bool registered = []() {
     CommandRegistry::register_command(
         "show-roles",
-        [](auto app_state, auto io, auto auth, auto user, auto log) {
+        [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<ShowRolesCommand>(
                 "show-roles",
                 "Show all roles assigned to a user",
                 "show-roles <email>",
-                app_state, io, auth, user, log);
+                app_state, io, auth, user, log, d);
         });
     return true;
 }();

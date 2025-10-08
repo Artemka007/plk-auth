@@ -17,22 +17,18 @@ public:
         , role_id_(role_id) {
     }
     
-    // Геттеры
     const std::string& id() const { return id_; }
     const std::string& user_id() const { return user_id_; }
     const std::string& role_id() const { return role_id_; }
     const std::string& assigned_at() const { return assigned_at_; }
 
-    // Сеттеры
     void set_user_id(const std::string& user_id) { user_id_ = user_id; }
     void set_role_id(const std::string& role_id) { role_id_ = role_id; }
 
-    // Сериализация для вставки
     std::vector<std::string> get_insert_values() const {
         return {user_id_, role_id_};
     }
 
-    // Десериализация из pqxx
     void from_row(const pqxx::row& row) {
         id_ = row["id"].as<std::string>();
         user_id_ = row["user_id"].as<std::string>();
@@ -47,4 +43,4 @@ private:
     std::string assigned_at_;
 };
 
-} // namespace models
+}

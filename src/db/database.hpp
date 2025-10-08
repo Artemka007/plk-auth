@@ -31,7 +31,6 @@ public:
         const std::string& user,
         const std::string& password);
     
-    // Основные операции
     bool test_connection();
     void close();
     bool create_schema();
@@ -40,12 +39,10 @@ public:
     bool backup(const std::string& backup_path);
     bool restore(const std::string& backup_path);
     
-    // Геттеры
     std::shared_ptr<pqxx::connection> get_connection() const { return connection_; }
     const std::string& get_connection_string() const { return connection_string_; }
     std::string get_connection_info() const;
     
-    // Проверка состояния
     bool is_connected() const { 
         return connection_ && connection_->is_open(); 
     }
@@ -63,4 +60,4 @@ public:
     std::shared_ptr<dao::DataExportImportDAO> create_export_import_dao();
 };
 
-} // namespace db
+}

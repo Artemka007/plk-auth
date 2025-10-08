@@ -93,7 +93,6 @@ CommandArgs StandardIOHandler::parse_command(const std::string &input) const {
     }
 
     if (!current.empty()) {
-        // Handle last token
         if (current.rfind("--", 0) == 0) {
             auto pos = current.find('=');
             if (pos != std::string::npos) {

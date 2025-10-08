@@ -63,10 +63,10 @@ bool LoginCommand::is_visible() const {
 namespace {
 bool registered = []() {
     CommandRegistry::register_command(
-        "login", [](auto app_state, auto io, auto auth, auto user, auto log) {
+        "login", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<LoginCommand>(
                 "login", "Login with your email", "login <email>", app_state,
-                io, auth, user, log);
+                io, auth, user, log, d);
         });
     return true;
 }();
