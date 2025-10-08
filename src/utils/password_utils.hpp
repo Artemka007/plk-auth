@@ -98,21 +98,20 @@ public:
         if (password.length() < 8) {
             return false;
         }
-        return true;
 
-        // bool has_upper = false, has_lower = false, has_digit = false, has_special = false;
-        // for (char c : password) {
-        //     if (std::isupper(c))
-        //         has_upper = true;
-        //     else if (std::islower(c))
-        //         has_lower = true;
-        //     else if (std::isdigit(c))
-        //         has_digit = true;
-        //     else if (std::ispunct(c))
-        //         has_special = true;
-        // }
+        bool has_upper = false, has_lower = false, has_digit = false, has_special = false;
+        for (char c : password) {
+            if (std::isupper(c))
+                has_upper = true;
+            else if (std::islower(c))
+                has_lower = true;
+            else if (std::isdigit(c))
+                has_digit = true;
+            else if (std::ispunct(c))
+                has_special = true;
+        }
 
-        // return has_upper && has_lower && has_digit && has_special;
+        return has_upper && has_lower && has_digit && has_special;
     }
 
     static std::string generate_random_password(size_t length) {

@@ -194,37 +194,12 @@ std::vector<std::string> UserService::get_user_permissions(const std::shared_ptr
     return permissions;
 }
 
-// Вспомогательный метод для получения роли по имени
 std::shared_ptr<models::UserRole> UserService::get_role_by_name(const std::string& role_name) {
-    try {
-        // Создаем временный объект роли для поиска
-        // В реальной реализации нужно добавить метод find_by_name в UserRoleDAO
-        auto role = std::make_shared<models::UserRole>(role_name, "");
-
-        // Для системных ролей используем предопределенные ID
-        if (role_name == "ADMIN") {
-            role->set_id("role-admin");
-            return role;
-        } else if (role_name == "USER") {
-            role->set_id("role-user");
-            return role;
-        }
-
-        return nullptr;
-
-    } catch (const std::exception& e) {
-        std::cerr << "❌ Error getting role by name: " << e.what() << std::endl;
-        return nullptr;
-    }
+    return user_dao_->get_role_by_name(role_name);
 }
 
-// Существующие методы (остаются без изменений, но используют новые зависимости)
-std::optional<models::User> UserService::find_by_email(const std::string &email) {
-    auto user = user_dao_->find_by_email(email);
-    if (user) {
-        return *user;
-    }
-    return std::nullopt;
+std::shared_ptr<models::User> UserService::find_by_email(const std::string &email) {
+    return user_dao_->find_by_email(email);
 }
 
 std::vector<models::User> UserService::get_all_users() {
@@ -244,14 +219,13 @@ bool UserService::delete_user(const std::string &email) {
     return user_dao_->delete_by_id(user->id());
 }
 
-bool UserService::add_role_to_user(const std::string &email, const models::UserRole role) {
+bool UserService::add_role_to_user(const std::string &email, const std::shared_ptr<models::UserRole> role) {
     auto user = user_dao_->find_by_email(email);
     if (!user) {
         return false;
     }
 
-    auto role_ptr = std::make_shared<models::UserRole>(role);
-    return user_dao_->assign_role(user, role_ptr);
+    return user_dao_->assign_role(user, role);
 }
 
 bool UserService::remove_role_from_user(const std::string &email, const models::UserRole role) {
