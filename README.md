@@ -43,6 +43,12 @@
 docker compose up --build
 ```
 
+В новом терминале запустите
+```bash
+docker exec -it cpp_application /bin/bash
+./app
+```
+
 ### Администратор
 
 #### Старт работы
