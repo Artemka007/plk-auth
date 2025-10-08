@@ -1,0 +1,370 @@
+# Документация к решению команды Digital Inc.  
+**"Сервис централизованной авторизации для промышленных контроллеров в электроэнергетике"**
+
+> **Ссылка на репозиторий [git](https://github.com/Artemka007/plk-auth)**
+
+## Оглавление
+1. [Приветствие](#приветствие)
+2. [Архитектура системы](#архитектура-системы)
+3. [Руководство по использованию](#руководство-по-использованию)
+    3.1. [Установка](#установка)
+    3.2. [Администратор](#администратор)
+    3.3. [Пользователь](#пользователь)
+4. [Справочник команд](#справочник-команд)
+    4.1. [Команды аутентификации](#команды-аутентификации)
+    4.2. [Команды администрирования](#команды-администрирования)
+    4.3. [Команды системы](#команды-системы)
+    4.4. [Команды работы с логами](#команды-работы-с-логами)
+5. [Структура базы данных](#структура-базы-данных)
+6. [Уровни доступа и разрешения](#уровни-доступа-и-разрешения)
+
+## Приветствие
+
+Команда Digital Inc. приветствует Вас в документации "Сервиса централизованной авторизации для промышленных контроллеров в электроэнергетике"!
+Мы рады, что Вы с нами! Здесь Вы найдёте всё необходимое для успешной работы с нашим сервисом.
+
+## Архитектура системы
+
+Система построена по модульному принципу с четким разделением ответственности:
+
+- **CLI модуль** - интерфейс командной строки для взаимодействия с системой
+- **DAO модуль** - слой доступа к данным (Data Access Object)
+- **Services модуль** - бизнес-логика приложения
+- **Models модуль** - модели данных системы
+- **DB модуль** - управление подключением к базе данных
+- **Utils модуль** - вспомогательные утилиты
+
+## Руководство по использованию
+
+### Установка
+
+```bash
+docker compose up --build
+```
+
+### Администратор
+
+#### Старт работы
+
+После установки сервера сразу же создаётся учётная запись администратора. Первичный доступ к ней по логину "admin", паролю "admin".
+Сразу же после авторизации система заставит администратора поменять пароль.
+
+**ЭТОТ ШАГ ДОЛЖЕН БЫТЬ ВЫПОЛНЕН, ИНАЧЕ ДОСТУПА К ПРОЧЕМУ ФУНКЦИОНАЛУ НЕ БУДЕТ**
+
+Установить новый пароль администратор может введя команду `change-password`.
+
+После смены пароля администратор может приступить к кастомизации базы данных, создавая новых пользователей, назначая им роли или же внедрить уже существующую базу данных.
+
+> **ВАЖНО** Внедряемая извне база данных должна соответствовать структуре базы данных, которая создаётся при установке сервиса. Поэтому ВНИМАТЕЛЬНО проверьте структуру базы данных перед внедрением, чтобы не было ошибок при слиянии!
+
+#### Уровни доступа администратора
+
+- Полный доступ ко всем функциям системы
+- Управление пользователями и их правами
+- Просмотр и экспорт логов
+- Импорт/экспорт данных БД
+
+### Пользователь
+
+Для входа в систему воспользуйтесь логином и паролем, выданным Вам администратором. У каждого пользователя есть роли. Каждая роль подразумевает под собой уровень доступа для каждого пользователя к функциям сервиса.
+
+## Справочник команд
+
+### Команды аутентификации
+
+#### `login`
+**Описание:** Вход в систему  
+**Доступ:** Все пользователи (до аутентификации)  
+**Параметры:**
+- `username` - имя пользователя
+- `password` - пароль
+**Пример:**
+```bash
+login --username admin --password admin
+```
+
+#### `logout`
+**Описание:** Выход из системы  
+**Доступ:** Все аутентифицированные пользователи  
+**Параметры:** Нет  
+**Пример:**
+```bash
+logout
+```
+
+#### `change-password`
+**Описание:** Смена пароля текущего пользователя  
+**Доступ:** Все аутентифицированные пользователи  
+**Параметры:**
+- `current-password` - текущий пароль
+- `new-password` - новый пароль
+**Пример:**
+```bash
+change-password --current-password oldpass --new-password newpass
+```
+
+### Команды администрирования
+
+#### `create-user`
+**Описание:** Создание нового пользователя  
+**Доступ:** Администратор  
+**Параметры:**
+- `first-name` - имя (обязательно)
+- `last-name` - фамилия (обязательно)
+- `email` - email (обязательно, уникальный)
+- `phone` - телефон (опционально)
+- `password` - пароль (обязательно)
+- `roles` - роли через запятую (опционально)
+**Пример:**
+```bash
+create-user --first-name "Иван" --last-name "Петров" --email "ivan@example.com" --password "secret123" --roles "user,engineer"
+```
+
+#### `delete-user`
+**Описание:** Удаление пользователя  
+**Доступ:** Администратор  
+**Параметры:**
+- `user-id` - ID пользователя (обязательно)
+**Пример:**
+```bash
+delete-user --user-id "uuid-пользователя"
+```
+
+#### `assign-role`
+**Описание:** Назначение роли пользователю  
+**Доступ:** Администратор  
+**Параметры:**
+- `user-id` - ID пользователя (обязательно)
+- `role` - название роли (обязательно)
+**Пример:**
+```bash
+assign-role --user-id "uuid-пользователя" --role "engineer"
+```
+
+#### `revoke-role`
+**Описание:** Отзыв роли у пользователя  
+**Доступ:** Администратор  
+**Параметры:**
+- `user-id` - ID пользователя (обязательно)
+- `role` - название роли (обязательно)
+**Пример:**
+```bash
+revoke-role --user-id "uuid-пользователя" --role "engineer"
+```
+
+#### `list-users`
+**Описание:** Просмотр списка пользователей  
+**Доступ:** Администратор  
+**Параметры:**
+- `active-only` - показывать только активных пользователей (опционально)
+**Пример:**
+```bash
+list-users --active-only
+```
+
+#### `export-data`
+**Описание:** Экспорт данных пользователей  
+**Доступ:** Администратор  
+**Параметры:**
+- `format` - формат экспорта (json/csv)
+- `output-file` - путь к файлу для сохранения
+**Пример:**
+```bash
+export-data --format json --output-file /backup/users.json
+```
+
+#### `import-data`
+**Описание:** Импорт данных пользователей  
+**Доступ:** Администратор  
+**Параметры:**
+- `file` - путь к файлу для импорта
+- `merge` - объединить с существующими данными (опционально)
+**Пример:**
+```bash
+import-data --file /backup/users.json --merge
+```
+
+### Команды системы
+
+#### `whoami`
+**Описание:** Показать информацию о текущем пользователе  
+**Доступ:** Все аутентифицированные пользователи  
+**Параметры:** Нет  
+**Пример:**
+```bash
+whoami
+```
+
+#### `help`
+**Описание:** Показать справку по командам  
+**Доступ:** Все пользователи  
+**Параметры:**
+- `command` - конкретная команда для справки (опционально)
+**Пример:**
+```bash
+help create-user
+```
+
+#### `exit`
+**Описание:** Выйти из приложения  
+**Доступ:** Все пользователи  
+**Параметры:** Нет  
+**Пример:**
+```bash
+exit
+```
+
+### Команды работы с логами
+
+#### `view-logs`
+**Описание:** Просмотр системных логов  
+**Доступ:** Администратор  
+**Параметры:**
+- `level` - фильтр по уровню (DEBUG/INFO/WARNING/ERROR/CRITICAL)
+- `action` - фильтр по типу действия
+- `user` - фильтр по пользователю
+- `limit` - ограничение количества записей
+**Пример:**
+```bash
+view-logs --level ERROR --limit 50
+```
+
+#### `export-logs`
+**Описание:** Экспорт логов в файл  
+**Доступ:** Администратор  
+**Параметры:**
+- `output-file` - путь к файлу для сохранения
+- `format` - формат экспорта (json/csv)
+**Пример:**
+```bash
+export-logs --output-file /logs/system.log --format json
+```
+
+## Структура базы данных
+
+### Таблица app_user
+```sql
+CREATE TABLE IF NOT EXISTS app_user (
+    id VARCHAR(36) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    patronymic VARCHAR(100),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20),
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    password_change_required BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login_at TIMESTAMP
+)
+```
+
+### Таблица user_role
+```sql
+CREATE TABLE IF NOT EXISTS user_role (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT,
+    is_system BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+### Таблица user_role_assignment
+```sql
+CREATE TABLE IF NOT EXISTS user_role_assignment (
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL REFERENCES app_user(id) ON DELETE CASCADE,
+    role_id VARCHAR(36) NOT NULL REFERENCES user_role(id) ON DELETE CASCADE,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, role_id)
+)
+```
+
+### Таблица access_permission
+```sql
+CREATE TABLE IF NOT EXISTS access_permission (
+    id VARCHAR(36) PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL,
+    description TEXT
+)
+```
+
+### Таблица role_permission
+```sql
+CREATE TABLE IF NOT EXISTS role_permission (
+    id SERIAL PRIMARY KEY,
+    role_id VARCHAR(36) NOT NULL REFERENCES user_role(id) ON DELETE CASCADE,
+    permission_id VARCHAR(36) NOT NULL REFERENCES access_permission(id) ON DELETE CASCADE,
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(role_id, permission_id)
+)
+```
+
+### Таблица system_log
+```sql
+CREATE TABLE IF NOT EXISTS system_log (
+    id VARCHAR(36) PRIMARY KEY,
+    level VARCHAR(10) NOT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    message TEXT NOT NULL,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actor_id VARCHAR(36) REFERENCES app_user(id) ON DELETE SET NULL,
+    subject_id VARCHAR(36) REFERENCES app_user(id) ON DELETE SET NULL,
+    ip_address VARCHAR(45),
+    user_agent TEXT
+)
+```
+
+## Уровни доступа и разрешения
+
+### Уровни логирования (LogLevel)
+- `DEBUG` - отладочная информация
+- `INFO` - информационные сообщения
+- `WARNING` - предупреждения
+- `ERROR` - ошибки
+- `CRITICAL` - критические ошибки
+
+### Типы действий (ActionType)
+- `USER_CREATED` - создание пользователя
+- `USER_UPDATED` - обновление пользователя
+- `USER_DELETED` - удаление пользователя
+- `USER_ROLE_CHANGED` - изменение ролей пользователя
+- `USER_PASSWORD_CHANGED` - смена пароля
+- `USER_STATUS_CHANGED` - изменение статуса пользователя
+- `ROLE_CREATED` - создание роли
+- `ROLE_UPDATED` - обновление роли
+- `ROLE_DELETED` - удаление роли
+- `SYSTEM_LOGIN` - вход в систему
+- `SYSTEM_LOGOUT` - выход из системы
+- `SYSTEM_BACKUP_CREATED` - создание резервной копии
+- `SYSTEM_BACKUP_RESTORED` - восстановление из резервной копии
+- `SYSTEM_SETTINGS_CHANGED` - изменение настроек системы
+- `SECURITY_VIOLATION` - нарушение безопасности
+- `SECURITY_PASSWORD_RESET` - сброс пароля
+- `SECURITY_ACCESS_DENIED` - доступ запрещен
+- `PROFILE_UPDATED` - обновление профиля
+- `PROFILE_VIEWED` - просмотр профиля
+
+### Типы разрешений (AccessPermissionType)
+- `USER_CREATE` - создание пользователей
+- `USER_READ` - чтение информации о пользователях
+- `USER_UPDATE` - обновление пользователей
+- `USER_DELETE` - удаление пользователей
+- `USER_CHANGE_ROLE` - изменение ролей пользователей
+- `ROLE_CREATE` - создание ролей
+- `ROLE_UPDATE` - обновление ролей
+- `ROLE_DELETE` - удаление ролей
+- `SYSTEM_IMPORT` - импорт данных
+- `SYSTEM_EXPORT` - экспорт данных
+- `SYSTEM_VIEW_LOGS` - просмотр логов
+- `SYSTEM_MANAGE_SETTINGS` - управление настройками системы
+- `PROFILE_READ` - чтение профиля
+- `PROFILE_UPDATE` - обновление профиля
+- `PASSWORD_CHANGE` - смена пароля
+
+---
+
+*Документация подготовлена командой Digital Inc. © 2024*
