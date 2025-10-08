@@ -68,7 +68,6 @@ private:
     std::shared_ptr<IOHandler> io_handler_;
     std::shared_ptr<dao::UserDAO> user_dao_;
     std::shared_ptr<dao::AccessPermissionDAO> permission_dao_;
-    std::shared_ptr<dao::AccessPermissionDAO> permission_dao_;
 
     bool create_system_roles();
 };
