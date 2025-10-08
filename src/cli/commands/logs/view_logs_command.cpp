@@ -1,4 +1,5 @@
 #include "view_logs_command.hpp"
+#include "../command_registry.hpp"
 #include "src/cli/app_state.hpp"
 #include "src/cli/io_handler.hpp"
 #include "src/models/system_log.hpp"
@@ -57,3 +58,16 @@ bool ViewLogsCommand::is_visible() const {
     auto current_user = app_state_->get_current_user();
     return current_user && user_service_->has_role(current_user, "ADMIN");
 }
+
+namespace {
+bool registered = []() {
+    CommandRegistry::register_command(
+        "view-logs",
+        [](auto app_state, auto io, auto auth, auto user, auto log) {
+            return std::make_unique<ViewLogsCommand>(
+                "view-logs", "Show recent system logs", app_state, io, auth,
+                user, log);
+        });
+    return true;
+}();
+} // namespace

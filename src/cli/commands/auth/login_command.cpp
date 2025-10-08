@@ -1,5 +1,6 @@
 #include "login_command.hpp"
 #include "src/services/auth_service.hpp"
+#include "../command_registry.hpp"
 
 ValidationResult LoginCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() != 1) {
@@ -37,4 +38,15 @@ bool LoginCommand::execute(const CommandArgs &args) {
 
 bool LoginCommand::is_visible() const {
     return !app_state_->is_authenticated();
+}
+
+namespace {
+bool registered = []() {
+    CommandRegistry::register_command(
+        "login", [](auto app_state, auto io, auto auth, auto user, auto log) {
+            return std::make_unique<LoginCommand>(
+                "login", "Login with your email", app_state, io, auth, user, log);
+        });
+    return true;
+}();
 }

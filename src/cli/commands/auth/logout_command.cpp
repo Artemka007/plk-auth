@@ -1,5 +1,6 @@
 #include "logout_command.hpp"
 #include "src/models/enums.hpp"
+#include "../command_registry.hpp"
 
 ValidationResult LogoutCommand::validate_args(const CommandArgs &args) const {
     if (!args.positional.empty() || !args.flags.empty() || !args.options.empty()) {
@@ -37,4 +38,16 @@ bool LogoutCommand::execute(const CommandArgs &args) {
 
 bool LogoutCommand::is_visible() const {
     return app_state_->is_authenticated();
+}
+
+
+namespace {
+bool registered = []() {
+    CommandRegistry::register_command(
+        "logout", [](auto app_state, auto io, auto auth, auto user, auto log) {
+            return std::make_unique<LogoutCommand>(
+                "logout", "Log out of the application", app_state, io, auth, user, log);
+        });
+    return true;
+}();
 }

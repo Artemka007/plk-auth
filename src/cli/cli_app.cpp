@@ -1,5 +1,5 @@
 #include "cli_app.hpp"
-#include "commands/command_factory.hpp"
+#include "commands/command_registry.hpp"
 #include "src/models/user.hpp"
 
 #include "src/services/auth_service.hpp"
@@ -18,11 +18,11 @@ CliApp::CliApp(std::shared_ptr<services::UserService> user_service,
 }
 
 void CliApp::initialize_commands() {
-    commands_ = CommandFactory::create_all_commands(
+    commands_ = CommandRegistry::create_all_commands(
         app_state_, io_handler_, auth_service_, user_service_, log_service_);
 
     command_map_.clear();
-    for (const auto &cmd : commands_) {
+    for (auto &cmd : commands_) {
         command_map_[cmd->get_name()] = cmd.get();
     }
 }
@@ -80,6 +80,5 @@ void CliApp::execute_command(const std::string &input) {
 
     cmd->execute(args);
 }
-
 
 void CliApp::Stop() { app_state_->set_running(false); }

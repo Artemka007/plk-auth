@@ -4,13 +4,13 @@
 #include "src/models/user_role.hpp"
 #include "src/utils/password_utils.hpp"
 
-namespace services
-{
+namespace services {
 
 UserService::UserService(std::shared_ptr<dao::UserDAO> user_dao)
     : user_dao_(std::move(user_dao)) {}
 
-std::optional<models::User> UserService::find_by_email(const std::string &email) {
+std::optional<models::User>
+UserService::find_by_email(const std::string &email) {
     auto user = user_dao_->find_by_email(email);
     if (user) {
         return *user;
@@ -35,11 +35,14 @@ CreateUserResult UserService::create_user(const std::string &first_name,
         return {false, "User with this email already exists", nullptr, ""};
     }
 
-    auto new_user = std::make_shared<models::User>(first_name, last_name, email);
+    auto new_user =
+        std::make_shared<models::User>(first_name, last_name, email);
 
     // Generate random password
-    std::string user_password = utils::PasswordUtils::generate_random_password(12);
-    std::string password_hash = utils::PasswordUtils::hash_password_pbkdf2(user_password);
+    std::string user_password =
+        utils::PasswordUtils::generate_random_password(12);
+    std::string password_hash =
+        utils::PasswordUtils::hash_password_pbkdf2(user_password);
 
     new_user->set_password_hash(password_hash);
     new_user->require_password_change();
@@ -83,7 +86,8 @@ bool UserService::remove_role_from_user(const std::string &email,
     return user_dao_->remove_role(user_ptr, role_ptr);
 }
 
-bool UserService::is_admin(const std::shared_ptr<const models::User> &user) const {
+bool UserService::is_admin(
+    const std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }
@@ -93,7 +97,8 @@ bool UserService::is_admin(const std::shared_ptr<const models::User> &user) cons
     return user_dao_->has_role(non_const_user, "ADMIN");
 }
 
-bool UserService::can_manage_users(const std::shared_ptr<const models::User> &user) const {
+bool UserService::can_manage_users(
+    const std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }

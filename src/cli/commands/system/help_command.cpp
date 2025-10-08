@@ -1,4 +1,6 @@
 #include "help_command.hpp"
+#include "../command_registry.hpp"
+
 
 ValidationResult HelpCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() > 1) {
@@ -35,3 +37,16 @@ void HelpCommand::set_available_commands(
 }
 
 bool HelpCommand::is_visible() const { return true; }
+
+// --- Static registration ---
+namespace {
+bool registered = []() {
+    CommandRegistry::register_command(
+        "help", [](auto app_state, auto io, auto auth, auto user, auto log) {
+            return std::make_unique<HelpCommand>(
+                "help", "Show help", app_state, io, auth, user, log
+            );
+        });
+    return true;
+}();
+} // namespace

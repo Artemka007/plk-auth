@@ -1,7 +1,9 @@
 #include "delete_user_command.hpp"
+#include "../command_registry.hpp"
 #include "src/services/user_service.hpp"
 
-ValidationResult DeleteUserCommand::validate_args(const CommandArgs &args) const {
+ValidationResult
+DeleteUserCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() != 1) {
         return {false, "Usage: delete-user <email>"};
     }
@@ -49,3 +51,16 @@ bool DeleteUserCommand::is_visible() const {
     auto current_user = app_state_->get_current_user();
     return current_user && user_service_->can_manage_users(current_user);
 }
+
+namespace {
+bool registered = []() {
+    CommandRegistry::register_command(
+        "delete-user",
+        [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
+            return std::make_unique<DeleteUserCommand>(
+                "delete-user", "Delete an existing user", app_state, io, auth,
+                user_svc, log);
+        });
+    return true;
+}();
+} // namespace
