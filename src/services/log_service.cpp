@@ -106,6 +106,38 @@ void LogService::critical(
         ip_address, user_agent);
 }
 
+std::vector<std::shared_ptr<models::SystemLog>> LogService::get_logs(
+    std::optional<models::LogLevel> level,
+    std::optional<models::ActionType> action,
+    std::optional<std::string> actor_id,
+    std::optional<std::string> subject_id,
+    std::optional<std::chrono::system_clock::time_point> start_time,
+    std::optional<std::chrono::system_clock::time_point> end_time,
+    size_t limit) {
+    dao::LogFilter filter;
+    dao::Pagination pagination;
+
+    pagination.page_size = limit;
+    pagination.page = 1;
+
+    // Fill filter
+    if (level.has_value())
+        filter.level = *level;
+    if (action.has_value())
+        filter.action_type = *action;
+    if (actor_id.has_value())
+        filter.actor_id = *actor_id;
+    if (subject_id.has_value())
+        filter.subject_id = *subject_id;
+    if (start_time.has_value())
+        filter.start_time = *start_time;
+    if (end_time.has_value())
+        filter.end_time = *end_time;
+
+    dao::LogQueryResult dao_result = log_dao_->find_by_filter(filter, pagination);
+    return dao_result.logs;
+}
+
 std::vector<std::shared_ptr<models::SystemLog>>
 LogService::get_recent_logs(size_t limit) {
     return log_dao_->find_recent_logs(limit);
@@ -127,8 +159,7 @@ LogService::get_logs_by_actor_id(const std::string &actor_id, size_t limit) {
 }
 
 std::vector<std::shared_ptr<models::SystemLog>>
-LogService::get_logs_by_subject_id(const std::string &subject_id,
-                                   size_t limit) {
+LogService::get_logs_by_subject_id(const std::string &subject_id, size_t limit) {
     return log_dao_->find_by_subject(subject_id, limit);
 }
 
@@ -150,7 +181,7 @@ bool LogService::cleanup_old_logs(int days_to_keep) {
     try {
         auto now = std::chrono::system_clock::now();
         auto cutoff_time = now - std::chrono::hours(24 * days_to_keep);
-        
+
         return log_dao_->cleanup_old_logs(cutoff_time);
     } catch (const std::exception& e) {
         return false;
@@ -183,4 +214,17 @@ LogService::sql_string_to_time_point(const std::string &sql_time) const {
     std::time_t time_t_val = std::mktime(&tm);
     return std::chrono::system_clock::from_time_t(time_t_val);
 }
+
+std::optional<std::chrono::system_clock::time_point>
+LogService::parse_time(const std::string &sql_time) const {
+    std::tm tm = {};
+    std::istringstream ss(sql_time);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+    if (ss.fail()) {
+        return std::nullopt;
+    }
+    std::time_t time_t_val = std::mktime(&tm);
+    return std::chrono::system_clock::from_time_t(time_t_val);
+}
+
 }
