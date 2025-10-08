@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <vector>
+#include <pqxx/pqxx>
 
 namespace models {
 
@@ -79,6 +81,37 @@ private:
     std::string role_id_;
     std::string permission_id_;
     std::string granted_at_;
+};
+
+struct SystemPermissions {
+    static constexpr const char* USER_CREATE = "USER_CREATE";
+    static constexpr const char* USER_READ = "USER_READ";
+    static constexpr const char* USER_UPDATE = "USER_UPDATE";
+    static constexpr const char* USER_DELETE = "USER_DELETE";
+    static constexpr const char* USER_CHANGE_ROLE = "USER_CHANGE_ROLE";
+    
+    static constexpr const char* ROLE_CREATE = "ROLE_CREATE";
+    static constexpr const char* ROLE_READ = "ROLE_READ";
+    static constexpr const char* ROLE_UPDATE = "ROLE_UPDATE";
+    static constexpr const char* ROLE_DELETE = "ROLE_DELETE";
+    
+    static constexpr const char* LOG_READ = "LOG_READ";
+    static constexpr const char* LOG_EXPORT = "LOG_EXPORT";
+    static constexpr const char* LOG_DELETE = "LOG_DELETE";
+    
+    static constexpr const char* SYSTEM_BACKUP = "SYSTEM_BACKUP";
+    static constexpr const char* SYSTEM_RESTORE = "SYSTEM_RESTORE";
+    static constexpr const char* SYSTEM_EXPORT = "SYSTEM_EXPORT";
+    static constexpr const char* SYSTEM_IMPORT = "SYSTEM_IMPORT";
+    
+    static std::vector<std::string> getAllPermissions() {
+        return {
+            USER_CREATE, USER_READ, USER_UPDATE, USER_DELETE, USER_CHANGE_ROLE,
+            ROLE_CREATE, ROLE_READ, ROLE_UPDATE, ROLE_DELETE,
+            LOG_READ, LOG_EXPORT, LOG_DELETE,
+            SYSTEM_BACKUP, SYSTEM_RESTORE, SYSTEM_EXPORT, SYSTEM_IMPORT
+        };
+    }
 };
 
 } // namespace models
