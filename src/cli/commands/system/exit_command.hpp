@@ -6,6 +6,7 @@ class ExitCommand : public BaseCommand {
 public:
     using BaseCommand::BaseCommand;
 
-    bool execute(const std::vector<std::string> &args) override;
-    bool isVisible() const override { return true; }
+    bool execute(const CommandArgs &args) override;
+    bool is_visible() const override;
+    ValidationResult validate_args(const CommandArgs &args) const override;
 };

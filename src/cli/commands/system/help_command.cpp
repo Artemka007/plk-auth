@@ -1,36 +1,37 @@
-#include "cli/commands/system/help_command.hpp"
-#include "cli/io_handler.hpp"
+#include "help_command.hpp"
 
-bool HelpCommand::execute(const std::vector<std::string> &args) {
-    if (args.size() > 1) {
-        io_handler_->error("Usage: help [command]");
-        return false;
+ValidationResult HelpCommand::validate_args(const CommandArgs &args) const {
+    if (args.positional.size() > 1) {
+        return {false, "Usage: help [command]"};
     }
+    return {true, ""};
+}
 
-    if (args.empty()) {
+bool HelpCommand::execute(const CommandArgs &args) {
+    if (args.positional.empty()) {
         io_handler_->println("Available commands:");
         for (const auto &[name, cmd] : available_commands_) {
-            if (cmd->isVisible()) {
-                io_handler_->println("  " + name + " - " +
-                                     cmd->get_description());
+            if (cmd->is_visible()) {
+                io_handler_->println("  " + name + " - " + cmd->get_description());
             }
         }
         return true;
     }
 
-    const std::string &target = args[0];
+    const std::string &target = args.positional[0];
     auto it = available_commands_.find(target);
-    if (it == available_commands_.end() || !it->second->isVisible()) {
+    if (it == available_commands_.end() || !it->second->is_visible()) {
         io_handler_->error("Unknown command: " + target);
         return false;
     }
+
     io_handler_->println(target + ": " + it->second->get_description());
     return true;
 }
 
 void HelpCommand::set_available_commands(
-    std::unordered_map<std::string, BaseCommand *> &map) {
+    const std::unordered_map<std::string, BaseCommand *> &map) {
     available_commands_ = map;
 }
 
-bool HelpCommand::isVisible() const { return true; }
+bool HelpCommand::is_visible() const { return true; }

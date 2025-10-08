@@ -1,11 +1,11 @@
 #pragma once
-
 #include "../base_command.hpp"
 
 class LogoutCommand : public BaseCommand {
 public:
     using BaseCommand::BaseCommand;
 
-    bool execute(const std::vector<std::string> &args) override;
-    bool isVisible() const override;
+    ValidationResult validate_args(const CommandArgs &args) const override;
+    bool execute(const CommandArgs &args) override;
+    bool is_visible() const override;
 };

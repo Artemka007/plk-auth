@@ -1,13 +1,15 @@
 #include "exit_command.hpp"
-#include "src/cli/app_state.hpp"
-#include "src/cli/io_handler.hpp"
 
-bool ExitCommand::execute(const std::vector<std::string> &args) {
-    if (!args.empty()) {
-        io_handler_->error("Usage: exit (no arguments)");
-        return false;
+ValidationResult ExitCommand::validate_args(const CommandArgs &args) const {
+    if (!args.positional.empty() || !args.flags.empty() || !args.options.empty()) {
+        return {false, "Usage: exit (no arguments)"};
     }
+    return {true, ""};
+}
 
+bool ExitCommand::is_visible() const { return true; }
+
+bool ExitCommand::execute(const CommandArgs &args) {
     app_state_->set_running(false);
     return true;
 }

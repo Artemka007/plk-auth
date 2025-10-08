@@ -45,22 +45,18 @@ void CliApp::Run() {
             break;
         }
 
-        if (input.empty()) {
-            continue;
-        }
+        if (input.empty()) continue;
 
         execute_command(input);
     }
 }
 
 void CliApp::execute_command(const std::string &input) {
-    auto args = io_handler_->split_command(input);
-    if (args.empty()) {
-        return;
-    }
+    auto args = io_handler_->parse_command(input);
+    if (args.positional.empty()) return;
 
-    std::string cmd_name = args[0];
-    args.erase(args.begin());
+    std::string cmd_name = args.positional[0];
+    args.positional.erase(args.positional.begin());
 
     auto it = command_map_.find(cmd_name);
     if (it == command_map_.end()) {
@@ -70,12 +66,20 @@ void CliApp::execute_command(const std::string &input) {
 
     BaseCommand *cmd = it->second;
 
-    if (!cmd->isVisible()) {
+    if (!cmd->is_visible()) {
         io_handler_->error("Command not available");
+        return;
+    }
+
+    // Validate arguments before execution
+    ValidationResult result = cmd->validate_args(args);
+    if (!result.valid) {
+        io_handler_->error(result.error_message);
         return;
     }
 
     cmd->execute(args);
 }
+
 
 void CliApp::Stop() { app_state_->set_running(false); }

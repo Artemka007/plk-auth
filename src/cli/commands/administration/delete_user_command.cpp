@@ -1,17 +1,16 @@
 #include "delete_user_command.hpp"
-#include "src/cli/app_state.hpp"
-#include "src/cli/io_handler.hpp"
 #include "src/services/user_service.hpp"
 
-bool DeleteUserCommand::execute(const std::vector<std::string> &args) {
-    if (args.size() != 1) {
-        io_handler_->error("Usage: delete-user <email>");
-        return false;
+ValidationResult DeleteUserCommand::validate_args(const CommandArgs &args) const {
+    if (args.positional.size() != 1) {
+        return {false, "Usage: delete-user <email>"};
     }
+    return {true, ""};
+}
 
-    const std::string &target_email = args[0];
+bool DeleteUserCommand::execute(const CommandArgs &args) {
+    const std::string &target_email = args.positional[0];
 
-    // Check if the user exists
     auto target_user = user_service_->find_by_email(target_email);
     if (!target_user) {
         io_handler_->error("User not found: " + target_email);
@@ -29,7 +28,7 @@ bool DeleteUserCommand::execute(const std::vector<std::string> &args) {
         return true;
     }
 
-    // Check if the user is trying to delete himself
+    // Prevent self-deletion
     auto current_user = app_state_->get_current_user();
     if (current_user && current_user->email() == target_email) {
         io_handler_->error("You cannot delete yourself");
@@ -46,7 +45,7 @@ bool DeleteUserCommand::execute(const std::vector<std::string> &args) {
     return false;
 }
 
-bool DeleteUserCommand::isVisible() const {
+bool DeleteUserCommand::is_visible() const {
     auto current_user = app_state_->get_current_user();
     return current_user && user_service_->can_manage_users(current_user);
 }
