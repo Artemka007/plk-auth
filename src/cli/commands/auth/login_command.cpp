@@ -30,7 +30,24 @@ bool LoginCommand::execute(const CommandArgs &args) {
     // Force password change if required
     if (result.password_change_required) {
         io_handler_->println("You must change your password now.");
-        // TODO: Trigger password change flow
+        bool changed = false;
+        while (!changed) {
+            std::string new_password = io_handler_->read_password("New password: ");
+            std::string confirm_password = io_handler_->read_password("Confirm password: ");
+
+            if (new_password != confirm_password) {
+                io_handler_->error("Passwords do not match. Try again.");
+                continue;
+            }
+
+            if (!auth_service_->change_password(user->email(), new_password)) {
+                io_handler_->error("Failed to change password. Try again.");
+                continue;
+            }
+
+            io_handler_->println("Password changed successfully.");
+            changed = true;
+        }
     }
 
     return true;

@@ -12,7 +12,7 @@ ValidationResult WhoAmICommand::validate_args(const CommandArgs &args) const {
 bool WhoAmICommand::execute(const CommandArgs &args) {
     auto user = app_state_->get_current_user();
     if (!user) {
-        io_handler_->println("Not logged in");
+        io_handler_->println("Not logged in (guest)");
         return false;
     }
 

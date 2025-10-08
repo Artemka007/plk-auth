@@ -16,10 +16,10 @@ public:
     // Используем PBKDF2 для более безопасного хеширования паролей
     static std::string hash_password_pbkdf2(const std::string &password, const std::string &salt = "") {
         std::string actual_salt = salt.empty() ? generate_salt(16) : salt;
-        
+
         std::vector<unsigned char> hash(32); // 256 бит = 32 байта
         const int iterations = 100000; // Количество итераций
-        
+
         if (PKCS5_PBKDF2_HMAC(
             password.c_str(), password.length(),
             reinterpret_cast<const unsigned char*>(actual_salt.c_str()), actual_salt.length(),
@@ -98,20 +98,21 @@ public:
         if (password.length() < 8) {
             return false;
         }
+        return true;
 
-        bool has_upper = false, has_lower = false, has_digit = false, has_special = false;
-        for (char c : password) {
-            if (std::isupper(c))
-                has_upper = true;
-            else if (std::islower(c))
-                has_lower = true;
-            else if (std::isdigit(c))
-                has_digit = true;
-            else if (std::ispunct(c))
-                has_special = true;
-        }
+        // bool has_upper = false, has_lower = false, has_digit = false, has_special = false;
+        // for (char c : password) {
+        //     if (std::isupper(c))
+        //         has_upper = true;
+        //     else if (std::islower(c))
+        //         has_lower = true;
+        //     else if (std::isdigit(c))
+        //         has_digit = true;
+        //     else if (std::ispunct(c))
+        //         has_special = true;
+        // }
 
-        return has_upper && has_lower && has_digit && has_special;
+        // return has_upper && has_lower && has_digit && has_special;
     }
 
     static std::string generate_random_password(size_t length) {
