@@ -7,6 +7,8 @@
 #include <sstream>
 #include <functional>
 #include <filesystem>
+#include "../dao/log_dao.hpp"
+#include "../dao/user_dao.hpp"
 
 namespace db {
 
@@ -206,7 +208,7 @@ bool Database::backup(const std::string& backup_path) {
     try {
         // Получаем параметры подключения из connection string
         std::string host = connection_->hostname();
-        int port = connection_->port();
+        std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
         
@@ -217,7 +219,7 @@ bool Database::backup(const std::string& backup_path) {
         // Формируем команду pg_dump
         std::string command = "pg_dump";
         command += " -h " + host;
-        command += " -p " + std::to_string(port);
+        command += " -p " + port;
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -f " + backup_path;
@@ -264,7 +266,7 @@ bool Database::restore(const std::string& backup_path) {
         
         // Получаем параметры подключения
         std::string host = connection_->hostname();
-        int port = connection_->port();
+        std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
         std::string password = "password"; // Это нужно исправить в реальном приложении
@@ -272,7 +274,7 @@ bool Database::restore(const std::string& backup_path) {
         // Формируем команду pg_restore
         std::string command = "pg_restore";
         command += " -h " + host;
-        command += " -p " + std::to_string(port);
+        command += " -p " + port;
         command += " -U " + user;
         command += " -d " + dbname;
         command += " -c"; // clean (drop) database objects before recreating
@@ -328,28 +330,19 @@ std::string Database::get_connection_info() const {
 // Реализация DAOFactory
 DAOFactory::DAOFactory(std::shared_ptr<Database> db) : database_(std::move(db)) {}
 
-std::unique_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
+std::shared_ptr<dao::UserDAO> DAOFactory::create_user_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
     // Включаем заголовочный файл UserDAO перед использованием
-    return std::unique_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
+    return std::shared_ptr<dao::UserDAO>(new dao::UserDAO(database_->get_connection()));
 }
 
-std::unique_ptr<dao::UserRoleDAO> DAOFactory::create_user_role_dao() {
+std::shared_ptr<dao::LogDAO> DAOFactory::create_log_dao() {
     if (!database_ || !database_->get_connection()) {
         throw std::runtime_error("Database connection is not available");
     }
-    // Заглушка - нужно реализовать UserRoleDAO
-    throw std::runtime_error("UserRoleDAO not implemented yet");
+    // Включаем заголовочный файл UserDAO перед использованием
+    return std::shared_ptr<dao::LogDAO>(new dao::LogDAO(database_->get_connection()));
 }
-
-std::unique_ptr<dao::AccessPermissionDAO> DAOFactory::create_access_permission_dao() {
-    if (!database_ || !database_->get_connection()) {
-        throw std::runtime_error("Database connection is not available");
-    }
-    // Заглушка - нужно реализовать AccessPermissionDAO
-    throw std::runtime_error("AccessPermissionDAO not implemented yet");
-}
-
 } // namespace db

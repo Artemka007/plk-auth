@@ -20,7 +20,6 @@ public:
     std::shared_ptr<const models::User> get_current_user() const;
     bool is_authenticated() const;
     bool is_running() const;
-    bool is_admin() const;
 
 private:
     std::shared_ptr<const models::User> current_user_ = nullptr;

@@ -1,14 +1,14 @@
-#include "cli/commands/system/whoami_command.hpp"
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "models/user.hpp"
+#include "whoami_command.hpp"
+#include "src/models/user.hpp"
 
-bool WhoAmICommand::execute(const std::vector<std::string> &args) {
-    if (!args.empty()) {
-        io_handler_->error("Usage: whoami (no arguments)");
-        return false;
+ValidationResult WhoAmICommand::validate_args(const CommandArgs &args) const {
+    if (!args.positional.empty() || !args.flags.empty() || !args.options.empty()) {
+        return {false, "Usage: whoami (no arguments)"};
     }
+    return {true, ""};
+}
 
+bool WhoAmICommand::execute(const CommandArgs &args) {
     auto user = app_state_->get_current_user();
     if (!user) {
         io_handler_->println("Not logged in");
@@ -16,11 +16,11 @@ bool WhoAmICommand::execute(const std::vector<std::string> &args) {
     }
 
     io_handler_->println("User: " + user->full_name());
-    io_handler_->println("Roles: ");
+    io_handler_->println("Roles:");
     for (const auto &role : user_service_->user_roles(user)) {
-        io_handler_->print("  - " + role->name() + "\n");
+        io_handler_->println("  - " + role->name());
     }
     return true;
 }
 
-bool WhoAmICommand::isVisible() { return true; }
+bool WhoAmICommand::is_visible() const { return true; }

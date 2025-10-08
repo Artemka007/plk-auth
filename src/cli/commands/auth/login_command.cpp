@@ -1,28 +1,40 @@
-#include "cli/commands/auth/login_command.hpp"
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "services/auth_service.hpp"
+#include "login_command.hpp"
+#include "src/services/auth_service.hpp"
 
-bool LoginCommand::execute(const std::vector<std::string> &email) {
-    if (args.size() != 1) {
-        io_handler_->error("Usage: login [email]");
+ValidationResult LoginCommand::validate_args(const CommandArgs &args) const {
+    if (args.positional.size() != 1) {
+        return {false, "Usage: login [email]"};
+    }
+    return {true, ""};
+}
+
+bool LoginCommand::execute(const CommandArgs &args) {
+    const std::string &email = args.positional[0];
+
+    // Secure password input
+    std::string password = io_handler_->read_password("Enter password for " + email + ": ");
+
+    services::LoginResult result = auth_service_->login(email, password);
+    if (!result.success) {
+        io_handler_->error("Login failed: invalid credentials");
         return false;
     }
 
-    const std::string &email = args[0];
+    auto user = result.user;
+    app_state_->set_current_user(user);
 
-    // Request password through secure input
-    std::string password = io_handler_->read_password("Enter password for " + email + ": ");
+    // TODO: create login log
+    io_handler_->println("Login successful. Welcome, " + user->email());
 
-    // Request to authentication service
-    if (auth_service_->login(email, password)) {
-        auto user = auth_service_->get_current_user();
-        io_handler_->println("Login successful. Welcome, " + user->email());
-        return true;
+    // Force password change if required
+    if (result.password_change_required) {
+        io_handler_->println("You must change your password now.");
+        // TODO: Trigger password change flow
     }
 
-    io_handler_->error("Login failed: invalid credentials");
-    return false;
+    return true;
 }
 
-bool LoginCommand::isVisible() { return !app_state_->is_authenticated() }
+bool LoginCommand::is_visible() const {
+    return !app_state_->is_authenticated();
+}

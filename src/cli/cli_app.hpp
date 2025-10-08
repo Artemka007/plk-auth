@@ -1,22 +1,22 @@
 #pragma once
 
-#include "cli/app_state.hpp"
-#include "cli/io_handler.hpp"
-#include "cli/commands/base_command.hpp"
+#include "app_state.hpp"
+#include "io_handler.hpp"
+#include "commands/base_command.hpp"
 #include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
 
-class AuthService;
-class UserService;
-class LogService;
+#include "src/services/auth_service.hpp"
+#include "src/services/log_service.hpp"
+#include "src/services/user_service.hpp"
 
 class CliApp {
 public:
-    CliApp(std::shared_ptr<UserService> user_service,
-           std::shared_ptr<AuthService> auth_service,
-           std::shared_ptr<LogService> log_service,
+    CliApp(std::shared_ptr<services::UserService> user_service,
+           std::shared_ptr<services::AuthService> auth_service,
+           std::shared_ptr<services::LogService> log_service,
            std::shared_ptr<IOHandler> io_handler);
 
     void Run();
@@ -24,9 +24,9 @@ public:
 
 private:
     // Domain dependencies
-    std::shared_ptr<UserService> user_service_;
-    std::shared_ptr<AuthService> auth_service_;
-    std::shared_ptr<LogService> log_service_;
+    std::shared_ptr<services::UserService> user_service_;
+    std::shared_ptr<services::AuthService> auth_service_;
+    std::shared_ptr<services::LogService> log_service_;
 
     // Cli-specific dependencies
     std::shared_ptr<IOHandler> io_handler_;

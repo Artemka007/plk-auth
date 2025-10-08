@@ -1,14 +1,18 @@
-#include "cli/cli_app.hpp"
-#include "cli/commands/command_factory.hpp"
+#include "cli_app.hpp"
+#include "commands/command_factory.hpp"
+#include "src/models/user.hpp"
 
-CliApp::CliApp(std::shared_ptr<UserService> user_service,
-               std::shared_ptr<AuthService> auth_service,
-               std::shared_ptr<LogService> log_service,
+#include "src/services/auth_service.hpp"
+#include "src/services/log_service.hpp"
+#include "src/services/user_service.hpp"
+
+CliApp::CliApp(std::shared_ptr<services::UserService> user_service,
+               std::shared_ptr<services::AuthService> auth_service,
+               std::shared_ptr<services::LogService> log_service,
                std::shared_ptr<IOHandler> io_handler)
     : user_service_(std::move(user_service)),
       auth_service_(std::move(auth_service)),
-      log_service_(std::move(log_service)),
-      io_handler_(std::move(io_handler)),
+      log_service_(std::move(log_service)), io_handler_(std::move(io_handler)),
       app_state_(std::make_shared<AppState>()) {
     initialize_commands();
 }
@@ -41,22 +45,18 @@ void CliApp::Run() {
             break;
         }
 
-        if (input.empty()) {
-            continue;
-        }
+        if (input.empty()) continue;
 
         execute_command(input);
     }
 }
 
 void CliApp::execute_command(const std::string &input) {
-    auto args = io_handler_->split_command(input);
-    if (args.empty()) {
-        return;
-    }
+    auto args = io_handler_->parse_command(input);
+    if (args.positional.empty()) return;
 
-    std::string cmd_name = args[0];
-    args.erase(args.begin());
+    std::string cmd_name = args.positional[0];
+    args.positional.erase(args.positional.begin());
 
     auto it = command_map_.find(cmd_name);
     if (it == command_map_.end()) {
@@ -66,13 +66,20 @@ void CliApp::execute_command(const std::string &input) {
 
     BaseCommand *cmd = it->second;
 
-    if (!cmd->isVisible()) {
+    if (!cmd->is_visible()) {
         io_handler_->error("Command not available");
+        return;
+    }
+
+    // Validate arguments before execution
+    ValidationResult result = cmd->validate_args(args);
+    if (!result.valid) {
+        io_handler_->error(result.error_message);
         return;
     }
 
     cmd->execute(args);
 }
 
-void CliApp::Stop() {
-    app_state_->set_running(false);
+
+void CliApp::Stop() { app_state_->set_running(false); }
