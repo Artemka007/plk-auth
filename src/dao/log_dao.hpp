@@ -6,6 +6,7 @@
 #include <pqxx/pqxx>
 #include "../models/system_log.hpp"
 #include "../models/enums.hpp"
+#include "log_dao.hpp"
 #include <iostream>
 
 namespace dao {

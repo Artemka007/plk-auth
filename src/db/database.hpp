@@ -6,6 +6,7 @@
 #include "src/dao/user_dao.hpp"
 #include "src/dao/log_dao.hpp"
 #include "src/dao/access_permission_dao.hpp"
+#include "src/dao/data_export_import_dao.hpp"
 
 namespace db {
 
@@ -43,10 +44,6 @@ public:
     std::shared_ptr<pqxx::connection> get_connection() const { return connection_; }
     const std::string& get_connection_string() const { return connection_string_; }
     std::string get_connection_info() const;
-
-    bool export_to_file(const std::string& file_path);
-    bool import_from_file(const std::string& file_path);
-    bool export_logs_to_csv(const std::string& file_path, const dao::LogFilter& filter = {});
     
     // Проверка состояния
     bool is_connected() const { 
@@ -63,6 +60,7 @@ public:
     std::shared_ptr<dao::UserDAO> create_user_dao();
     std::shared_ptr<dao::LogDAO> create_log_dao();
     std::shared_ptr<dao::AccessPermissionDAO> create_permission_dao();
+    std::shared_ptr<dao::DataExportImportDAO> create_export_import_dao();
 };
 
 } // namespace db

@@ -6,52 +6,50 @@
 #include "./services/user_service.hpp"
 #include "./services/auth_service.hpp"
 #include "./services/log_service.hpp"
+#include "./services/data_export_import_service.hpp"
 #include "./cli/cli_app.hpp"
 #include "./cli/standard_io_handler.hpp"
 
 // Функция для создания и настройки всех зависимостей
 std::shared_ptr<CliApp> create_cli_app() {
     try {
-        // 1. Создаем подключение к базе данных
+        auto io_handler = std::make_shared<StandardIOHandler>();
+
         auto db = db::Database::create(
-            "postgres",  // host
-            5432,        // port
-            "myapp",     // database
-            "postgres",  // user
-            "password"   // password
+            "postgres",
+            5432,
+            "myapp",
+            "postgres",
+            "password"
         );
         
-        std::cout << "✅ Database connection created successfully!\n";
+        io_handler->println("Database connection created successfully!");
         
-        // 2. Тестируем подключение
         if (!db->test_connection()) {
-            std::cout << "❌ Database connection test: FAILED\n";
+            io_handler->error("Database connection test: FAILED");
             return nullptr;
         }
-        std::cout << "✅ Database connection test: SUCCESS\n";
         
-        // 3. Создаем схему базы данных (если нужно)
-        std::cout << "🗃️ Creating database schema...\n";
+        io_handler->println("Creating database schema...");
         db->create_schema();
         
-        // 4. Создаем DAO фабрику и DAO объекты
         auto dao_factory = db::DAOFactory(db);
         auto user_dao = dao_factory.create_user_dao();
         auto log_dao = dao_factory.create_log_dao();
-        auto permission_dao = dao_factory.create_permission_dao(); // ← Новый DAO
+        auto permission_dao = dao_factory.create_permission_dao();
+        auto data_export_import_dao = dao_factory.create_export_import_dao();
         
-        // 5. Создаем сервисы
-        auto user_service = std::make_shared<services::UserService>(user_dao, permission_dao);
+        auto user_service = std::make_shared<services::UserService>(io_handler, user_dao, permission_dao);
         auto auth_service = std::make_shared<services::AuthService>(user_dao);
         auto log_service = std::make_shared<services::LogService>(log_dao);
+        auto data_export_import_service = std::make_shared<services::DataExportImportService>(data_export_import_dao, io_handler);
         
         user_service->initialize_system();
 
         // 6. Создаем CLI компоненты
-        auto io_handler = std::make_shared<StandardIOHandler>();
         
         // 7. Создаем и возвращаем CliApp
-        return std::make_shared<CliApp>(user_service, auth_service, log_service, io_handler);
+        return std::make_shared<CliApp>(user_service, auth_service, log_service, data_export_import_service, io_handler);
         
     } catch (const std::exception& e) {
         std::cerr << "❌ Error creating CLI app: " << e.what() << "\n";
