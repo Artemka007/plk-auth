@@ -44,7 +44,7 @@ void UserService::initialize_system() {
 
 bool UserService::create_default_admin() {
     try {
-        auto existing_admin = user_dao_->find_by_email("admin@sys.local");
+        auto existing_admin = user_dao_->find_by_email("admin@sys.loc");
         if (existing_admin) {
             io_handler_->println("ℹ️ System administrator already exists");
             log_service_->debug(models::ActionType::USER_CREATED, "System administrator already exists");
@@ -55,7 +55,7 @@ bool UserService::create_default_admin() {
         log_service_->info(models::ActionType::USER_CREATED, "Creating system administrator account");
 
         auto admin_user = std::make_shared<models::User>(
-            "System", "Administrator", "admin@sys.local");
+            "System", "Administrator", "admin@sys.loc");
 
         std::string password =
             utils::PasswordUtils::generate_random_password(12);
@@ -88,7 +88,7 @@ bool UserService::create_default_admin() {
         io_handler_->println("==========================================");
         io_handler_->println("🎯 SYSTEM ADMINISTRATOR CREATED");
         io_handler_->println("==========================================");
-        io_handler_->println("📧 Email: admin@sys.local");
+        io_handler_->println("📧 Email: admin@sys.loc");
         io_handler_->println("🔑 Password: " + password);
         io_handler_->println("⚠️  Please change password after first login!");
         io_handler_->println("==========================================");
