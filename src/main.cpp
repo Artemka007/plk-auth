@@ -10,7 +10,6 @@
 #include "./cli/cli_app.hpp"
 #include "./cli/standard_io_handler.hpp"
 
-// Функция для создания и настройки всех зависимостей
 std::shared_ptr<CliApp> create_cli_app() {
     try {
         auto io_handler = std::make_shared<StandardIOHandler>();
@@ -39,16 +38,13 @@ std::shared_ptr<CliApp> create_cli_app() {
         auto permission_dao = dao_factory.create_permission_dao();
         auto data_export_import_dao = dao_factory.create_export_import_dao();
         
-        auto user_service = std::make_shared<services::UserService>(io_handler, user_dao, permission_dao);
-        auto auth_service = std::make_shared<services::AuthService>(user_dao);
         auto log_service = std::make_shared<services::LogService>(log_dao);
-        auto data_export_import_service = std::make_shared<services::DataExportImportService>(data_export_import_dao, io_handler);
+        auto user_service = std::make_shared<services::UserService>(io_handler, user_dao, permission_dao);
+        auto auth_service = std::make_shared<services::AuthService>(user_dao, log_service);
+        auto data_export_import_service = std::make_shared<services::DataExportImportService>(data_export_import_dao, io_handler, log_service);
         
         user_service->initialize_system();
 
-        // 6. Создаем CLI компоненты
-        
-        // 7. Создаем и возвращаем CliApp
         return std::make_shared<CliApp>(user_service, auth_service, log_service, data_export_import_service, io_handler);
         
     } catch (const std::exception& e) {
@@ -61,7 +57,6 @@ int main() {
     std::cout << "🚀 Starting C++ PostgreSQL CLI Application...\n";
     
     try {
-        // Создаем CLI приложение
         auto cli_app = create_cli_app();
         
         if (!cli_app) {
@@ -72,7 +67,6 @@ int main() {
         std::cout << "✅ CLI application initialized successfully!\n";
         std::cout << "💻 Type 'help' to see available commands\n";
         
-        // Запускаем главный цикл приложения
         cli_app->Run();
         
         std::cout << "👋 Application finished successfully!\n";

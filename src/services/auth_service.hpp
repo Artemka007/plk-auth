@@ -4,6 +4,7 @@
 #include <string>
 #include "src/dao/user_dao.hpp"
 #include "src/models/user.hpp"
+#include "log_service.hpp"
 
 namespace services {
 
@@ -16,7 +17,7 @@ struct LoginResult {
 
 class AuthService {
 public:
-    explicit AuthService(std::shared_ptr<dao::UserDAO> user_dao);
+    explicit AuthService(std::shared_ptr<dao::UserDAO> user_dao, std::shared_ptr<services::LogService> log_service);
 
     // Основные методы аутентификации
     LoginResult login(const std::string &email, const std::string &password);
@@ -38,6 +39,7 @@ public:
 private:
     std::shared_ptr<dao::UserDAO> user_dao_;
     std::shared_ptr<models::User> current_user_;
+    std::shared_ptr<LogService> log_service_;
 };
 
 } // namespace services
