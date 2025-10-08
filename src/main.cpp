@@ -39,7 +39,7 @@ std::shared_ptr<CliApp> create_cli_app() {
         auto data_export_import_dao = dao_factory.create_export_import_dao();
         
         auto log_service = std::make_shared<services::LogService>(log_dao);
-        auto user_service = std::make_shared<services::UserService>(io_handler, user_dao, permission_dao);
+        auto user_service = std::make_shared<services::UserService>(io_handler, user_dao, permission_dao, log_service);
         auto auth_service = std::make_shared<services::AuthService>(user_dao, log_service);
         auto data_export_import_service = std::make_shared<services::DataExportImportService>(data_export_import_dao, io_handler, log_service);
         

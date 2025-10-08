@@ -21,7 +21,7 @@ bool AddRoleCommand::execute(const CommandArgs &args) {
     auto subject = user_service_->find_by_email(email);
     auto role = user_service_->get_role_by_name(role_name);
 
-    if (!user_service_->add_role_to_user(email, role)) {
+    if (!user_service_->add_role_to_user(email, role, current_user)) {
         io_handler_->error("Failed to add role " + role_name + " to " + email);
         log_service_->error(models::ActionType::USER_ROLE_CHANGED,
                             "Failed to add role " + role_name + " to " + email,

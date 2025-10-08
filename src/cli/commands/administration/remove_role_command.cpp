@@ -31,7 +31,7 @@ bool RemoveRoleCommand::execute(const CommandArgs &args) {
         return false;
     }
 
-    if (!user_service_->remove_role_from_user(email, *role)) {
+    if (!user_service_->remove_role_from_user(email, *role, app_state_->get_current_user())) {
         io_handler_->error("Failed to remove role " + role_name + " from " + email);
         log_service_->error(models::ActionType::USER_ROLE_CHANGED,
                             "Failed to remove role " + role_name + " from " + email,

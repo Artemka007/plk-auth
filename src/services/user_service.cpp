@@ -5,20 +5,24 @@
 #include "src/models/user.hpp"
 #include "src/models/user_role.hpp"
 #include "src/utils/password_utils.hpp"
+#include "log_service.hpp"
+#include "src/models/enums.hpp"
 #include <iostream>
 
 namespace services {
 
 UserService::UserService(
     std::shared_ptr<IOHandler> io_handler, std::shared_ptr<dao::UserDAO> user_dao,
-    std::shared_ptr<dao::AccessPermissionDAO> permission_dao)
+    std::shared_ptr<dao::AccessPermissionDAO> permission_dao,
+    std::shared_ptr<LogService> log_service)
     : io_handler_(std::move(io_handler)), user_dao_(std::move(user_dao)),
-      permission_dao_(std::move(permission_dao)) {}
+      permission_dao_(std::move(permission_dao)), log_service_(std::move(log_service)) {}
 
 // Инициализация системы
 void UserService::initialize_system() {
     try {
         io_handler_->println("Initializing system...");
+        log_service_->info(models::ActionType::SYSTEM_STARTUP, "Starting system initialization");
 
         // 1. Инициализируем системные разрешения и роли
         permission_dao_->initialize_system_permissions();
@@ -29,12 +33,15 @@ void UserService::initialize_system() {
         // 3. Создаем администратора по умолчанию
         if (create_default_admin()) {
             io_handler_->println("System initialization completed successfully");
+            log_service_->info(models::ActionType::SYSTEM_STARTUP, "System initialization completed successfully");
         } else {
             io_handler_->println("System initialization completed with warnings");
+            log_service_->warning(models::ActionType::SYSTEM_STARTUP, "System initialization completed with warnings");
         }
 
     } catch (const std::exception &e) {
         io_handler_->error("❌ System initialization failed: " + std::string(e.what()));
+        log_service_->critical(models::ActionType::SYSTEM_STARTUP, "System initialization failed: " + std::string(e.what()));
         throw;
     }
 }
@@ -45,10 +52,12 @@ bool UserService::create_default_admin() {
         auto existing_admin = user_dao_->find_by_email("admin@system.local");
         if (existing_admin) {
             io_handler_->println("ℹ️ System administrator already exists");
+            log_service_->debug(models::ActionType::USER_CREATED, "System administrator already exists");
             return true;
         }
 
         io_handler_->println("👑 Creating system administrator...");
+        log_service_->info(models::ActionType::USER_CREATED, "Creating system administrator account");
 
         // Создаем администратора
         auto admin_user = std::make_shared<models::User>(
@@ -62,11 +71,11 @@ bool UserService::create_default_admin() {
 
         admin_user->set_password_hash(password_hash);
         admin_user->set_active(true);
-        admin_user->require_password_change(); // Требуем смены пароля при
-                                               // первом входе
+        admin_user->require_password_change();
 
         if (!user_dao_->save(admin_user)) {
             io_handler_->error("❌ Failed to save admin user");
+            log_service_->error(models::ActionType::USER_CREATED, "Failed to save admin user to database");
             return false;
         }
 
@@ -74,11 +83,13 @@ bool UserService::create_default_admin() {
         auto admin_role = get_role_by_name("ADMIN");
         if (!admin_role) {
             io_handler_->error("❌ ADMIN role not found");
+            log_service_->error(models::ActionType::USER_ROLE_CHANGED, "ADMIN role not found for system administrator");
             return false;
         }
 
         if (!user_dao_->assign_role(admin_user, admin_role)) {
             io_handler_->error("❌ Failed to assign ADMIN role");
+            log_service_->error(models::ActionType::USER_ROLE_CHANGED, "Failed to assign ADMIN role to system administrator");
             return false;
         }
 
@@ -91,21 +102,26 @@ bool UserService::create_default_admin() {
         io_handler_->println("⚠️  Please change password after first login!");
         io_handler_->println("==========================================");
 
+        log_service_->info(models::ActionType::USER_CREATED, 
+                          "System administrator created successfully with temporary password",
+                          nullptr, admin_user);
+
         return true;
 
     } catch (const std::exception &e) {
         io_handler_->error("❌ Error creating default admin: " + std::string(e.what()));
+        log_service_->critical(models::ActionType::USER_CREATED, "Error creating default admin: " + std::string(e.what()));
         return false;
     }
 }
 
 bool UserService::create_system_roles() {
     try {
-        // Роли уже создаются в initialize_system_permissions()
-        // Здесь можно добавить дополнительную логику если нужно
+        log_service_->debug(models::ActionType::ROLE_CREATED, "Creating system roles");
         return true;
     } catch (const std::exception &e) {
         io_handler_->error("❌ Error creating system roles: " + std::string(e.what()));
+        log_service_->error(models::ActionType::ROLE_CREATED, "Error creating system roles: " + std::string(e.what()));
         return false;
     }
 }
@@ -114,10 +130,14 @@ bool UserService::create_system_roles() {
 CreateUserResult UserService::create_user(const std::string &first_name,
                                           const std::string &last_name,
                                           const std::string &email,
-                                          const std::string &role_name) {
+                                          const std::string &role_name,
+                                          const std::shared_ptr<const models::User>& actor) {
     try {
         // Если пользователь с таким email уже существует
         if (user_dao_->find_by_email(email) != nullptr) {
+            log_service_->warning(models::ActionType::USER_CREATED, 
+                                 "User creation failed - email already exists: " + email,
+                                 actor, nullptr);
             return {false, "User with this email already exists", nullptr, ""};
         }
 
@@ -135,6 +155,9 @@ CreateUserResult UserService::create_user(const std::string &first_name,
         new_user->set_active(true);
 
         if (!user_dao_->save(new_user)) {
+            log_service_->error(models::ActionType::USER_CREATED,
+                               "Failed to save user to database: " + email,
+                               actor, nullptr);
             return {false, "Failed to save user to database", nullptr, ""};
         }
 
@@ -143,16 +166,33 @@ CreateUserResult UserService::create_user(const std::string &first_name,
         if (role) {
             if (!user_dao_->assign_role(new_user, role)) {
                 io_handler_->println("⚠️ Failed to assign role " + role_name + " to user " + email);
+                log_service_->warning(models::ActionType::USER_ROLE_CHANGED,
+                                     "Failed to assign role " + role_name + " to user: " + email,
+                                     actor, new_user);
+            } else {
+                log_service_->info(models::ActionType::USER_ROLE_CHANGED,
+                                  "Assigned role " + role_name + " to user: " + email,
+                                  actor, new_user);
             }
         } else {
             io_handler_->println("⚠️ Role " + role_name + " not found for user " + email);
+            log_service_->warning(models::ActionType::USER_ROLE_CHANGED,
+                                 "Role " + role_name + " not found for user: " + email,
+                                 actor, new_user);
         }
+
+        log_service_->info(models::ActionType::USER_CREATED,
+                          "User created successfully: " + email + " with role: " + role_name,
+                          actor, new_user);
 
         // Успех
         return {true, "User created successfully", new_user, user_password};
 
     } catch (const std::exception &e) {
         io_handler_->error("❌ Error creating user: " + std::string(e.what()));
+        log_service_->error(models::ActionType::USER_CREATED,
+                           "Error creating user " + email + ": " + std::string(e.what()),
+                           actor, nullptr);
         return {false, "Error creating user: " + std::string(e.what()), nullptr, ""};
     }
 }
@@ -207,15 +247,27 @@ std::vector<std::string> UserService::get_user_permissions(
 }
 
 std::shared_ptr<models::UserRole> UserService::get_role_by_name(const std::string& role_name) {
-    return user_dao_->get_role_by_name(role_name);
+    auto role = user_dao_->get_role_by_name(role_name);
+    if (!role) {
+        log_service_->debug(models::ActionType::ROLE_CREATED, "Role not found: " + role_name);
+    }
+    return role;
 }
 
 std::shared_ptr<models::User> UserService::find_by_email(const std::string &email) {
-    return user_dao_->find_by_email(email);
+    auto user = user_dao_->find_by_email(email);
+    if (user) {
+        log_service_->debug(models::ActionType::PROFILE_VIEWED, "User found by email: " + email);
+    } else {
+        log_service_->debug(models::ActionType::PROFILE_VIEWED, "User not found by email: " + email);
+    }
+    return user;
 }
 
 std::vector<models::User> UserService::get_all_users() {
     auto users = user_dao_->find_all();
+    log_service_->debug(models::ActionType::PROFILE_VIEWED, 
+                       "Retrieved all users, count: " + std::to_string(users.size()));
     std::vector<models::User> result;
     for (const auto &user : users) {
         result.push_back(*user);
@@ -223,36 +275,79 @@ std::vector<models::User> UserService::get_all_users() {
     return result;
 }
 
-bool UserService::delete_user(const std::string &email) {
+bool UserService::delete_user(const std::string &email, const std::shared_ptr<const models::User>& actor) {
     auto user = user_dao_->find_by_email(email);
     if (!user) {
+        log_service_->warning(models::ActionType::USER_DELETED,
+                             "User deletion failed - user not found: " + email,
+                             actor, nullptr);
         return false;
     }
-    return user_dao_->delete_by_id(user->id());
+
+    bool result = user_dao_->delete_by_id(user->id());
+    if (result) {
+        log_service_->info(models::ActionType::USER_DELETED,
+                          "User deleted successfully: " + email,
+                          actor, user);
+    } else {
+        log_service_->error(models::ActionType::USER_DELETED,
+                           "User deletion failed: " + email,
+                           actor, user);
+    }
+    return result;
 }
 
-bool UserService::add_role_to_user(const std::string &email, const std::shared_ptr<models::UserRole> role) {
+bool UserService::add_role_to_user(const std::string &email, 
+                                  const std::shared_ptr<models::UserRole> role,
+                                  const std::shared_ptr<const models::User>& actor) {
     auto user = user_dao_->find_by_email(email);
     if (!user) {
+        log_service_->warning(models::ActionType::USER_ROLE_CHANGED,
+                             "Add role failed - user not found: " + email,
+                             actor, nullptr);
         return false;
     }
 
-    return user_dao_->assign_role(user, role);
+    bool result = user_dao_->assign_role(user, role);
+    if (result) {
+        log_service_->info(models::ActionType::USER_ROLE_CHANGED,
+                          "Role " + role->name() + " added to user: " + email,
+                          actor, user);
+    } else {
+        log_service_->error(models::ActionType::USER_ROLE_CHANGED,
+                           "Failed to add role " + role->name() + " to user: " + email,
+                           actor, user);
+    }
+    return result;
 }
 
 bool UserService::remove_role_from_user(const std::string &email,
-                                        const models::UserRole role) {
+                                        const models::UserRole role,
+                                        const std::shared_ptr<const models::User>& actor) {
     auto user_ptr = user_dao_->find_by_email(email);
     if (!user_ptr) {
+        log_service_->warning(models::ActionType::USER_ROLE_CHANGED,
+                             "Remove role failed - user not found: " + email,
+                             actor, nullptr);
         return false;
     }
 
     auto role_ptr = std::make_shared<models::UserRole>(role);
-    return user_dao_->remove_role(user_ptr, role_ptr);
+    bool result = user_dao_->remove_role(user_ptr, role_ptr);
+    
+    if (result) {
+        log_service_->info(models::ActionType::USER_ROLE_CHANGED,
+                          "Role " + role.name() + " removed from user: " + email,
+                          actor, user_ptr);
+    } else {
+        log_service_->error(models::ActionType::USER_ROLE_CHANGED,
+                           "Failed to remove role " + role.name() + " from user: " + email,
+                           actor, user_ptr);
+    }
+    return result;
 }
 
-bool UserService::is_admin(
-    const std::shared_ptr<const models::User> &user) const {
+bool UserService::is_admin(const std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }
@@ -260,16 +355,15 @@ bool UserService::is_admin(
     return user_dao_->has_role(non_const_user, "ADMIN");
 }
 
-bool UserService::can_manage_users(
-    const std::shared_ptr<const models::User> &user) const {
+bool UserService::can_manage_users(const std::shared_ptr<const models::User> &user) const {
     if (!user) {
         return false;
     }
 
     // Используем новую систему разрешений
-    return has_permission(user, models::SystemPermissions::USER_CREATE) ||
-           has_permission(user, models::SystemPermissions::USER_UPDATE) ||
-           has_permission(user, models::SystemPermissions::USER_DELETE);
+    return has_permission(user, "USER_CREATE") ||
+           has_permission(user, "USER_UPDATE") ||
+           has_permission(user, "USER_DELETE");
 }
 
 bool UserService::has_role(const std::shared_ptr<const models::User> &user,

@@ -38,7 +38,7 @@ bool DeleteUserCommand::execute(const CommandArgs &args) {
     }
 
     // Delete user
-    if (user_service_->delete_user(target_email)) {
+    if (user_service_->delete_user(target_email, current_user)) {
         io_handler_->println("User deleted: " + target_email);
         return true;
     }

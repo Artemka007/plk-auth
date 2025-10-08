@@ -17,7 +17,7 @@ bool CreateUserCommand::execute(const CommandArgs &args) {
     const std::string &last_name = args.positional[2];
 
     services::CreateUserResult result =
-        user_service_->create_user(first_name, last_name, email);
+        user_service_->create_user(first_name, last_name, email, "USER", app_state_->get_current_user());
 
     if (!result.success) {
         io_handler_->error("Failed to create user: " + result.message);

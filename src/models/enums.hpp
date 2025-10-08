@@ -34,6 +34,7 @@ enum class ActionType {
     PROFILE_VIEWED,
     SYSTEM_IMPORT,
     SYSTEM_EXPORT,
+    SYSTEM_STARTUP
 };
 
 enum class AccessPermissionType {
@@ -88,7 +89,8 @@ inline std::string to_string(ActionType action) {
         {ActionType::PROFILE_UPDATED, "PROFILE_UPDATED"},
         {ActionType::PROFILE_VIEWED, "PROFILE_VIEWED"},
         {ActionType::SYSTEM_IMPORT, "SYSTEM_IMPORT"},
-        {ActionType::SYSTEM_EXPORT, "SYSTEM_EXPORT"}
+        {ActionType::SYSTEM_EXPORT, "SYSTEM_EXPORT"},
+        {ActionType::SYSTEM_STARTUP, "SYSTEM_STARTUP"}
     };
     return names.at(action);
 }
@@ -152,7 +154,8 @@ inline ActionType string_to_action_type(const std::string& action_str) {
         {"PROFILE_UPDATED", ActionType::PROFILE_UPDATED},
         {"PROFILE_VIEWED", ActionType::PROFILE_VIEWED},
         {"SYSTEM_IMPORT", ActionType::SYSTEM_IMPORT},
-        {"SYSTEM_EXPORT", ActionType::SYSTEM_EXPORT}
+        {"SYSTEM_EXPORT", ActionType::SYSTEM_EXPORT},
+        {"SYSTEM_STARTUP", ActionType::SYSTEM_STARTUP}
     };
     
     auto it = action_map.find(action_str);
