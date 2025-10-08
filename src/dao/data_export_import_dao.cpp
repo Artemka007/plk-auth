@@ -22,7 +22,6 @@ bool DataExportImportDAO::export_to_file(const std::string& file_path) {
             return false;
         }
 
-        // Экспорт пользователей
         file << "-- Users table data\n";
         auto users_result = txn.exec(
             "SELECT id, first_name, last_name, patronymic, email, phone, "
@@ -48,7 +47,6 @@ bool DataExportImportDAO::export_to_file(const std::string& file_path) {
                  << ");\n";
         }
 
-        // Экспорт ролей
         file << "\n-- Roles table data\n";
         auto roles_result = txn.exec("SELECT id, name, description, is_system, created_at, updated_at FROM user_role");
         for (const auto& row : roles_result) {
@@ -73,21 +71,27 @@ bool DataExportImportDAO::export_to_file(const std::string& file_path) {
 bool DataExportImportDAO::export_logs_to_csv(const std::string& file_path, const LogFilter& filter) {
     try {
         pqxx::work txn(*connection_);
+        std::ofstream file(file_path);
+        
+        if (!file.is_open()) {
+            std::cerr << "Cannot open file: " << file_path << std::endl;
+            return false;
+        }
+
+        file << "level,action_type,message,timestamp,actor_id,subject_id,ip_address,user_agent\n";
+
+        std::string query = 
+            "SELECT level, action_type, message, timestamp, actor_id, subject_id, ip_address, user_agent "
+            "FROM system_log";
         
         std::string where_clause = "";
         if (filter.level != models::LogLevel{}) {
             where_clause += " WHERE level = '" + models::to_string(filter.level) + "'";
         }
         
-        std::string export_sql = 
-            "COPY (" 
-            "SELECT level, action_type, message, timestamp, actor_id, subject_id, ip_address, user_agent "
-            "FROM system_log" + where_clause + " "
-            "ORDER BY timestamp DESC"
-            ") TO STDOUT WITH CSV HEADER";
-        
-        std::ofstream file(file_path);
-        auto result = txn.exec(export_sql);
+        query += where_clause + " ORDER BY timestamp DESC";
+
+        auto result = txn.exec(query);
         
         for (const auto& row : result) {
             file << row["level"].as<std::string>() << ","
@@ -99,9 +103,11 @@ bool DataExportImportDAO::export_logs_to_csv(const std::string& file_path, const
                  << (row["ip_address"].is_null() ? "" : row["ip_address"].as<std::string>()) << ","
                  << (row["user_agent"].is_null() ? "" : row["user_agent"].as<std::string>()) << "\n";
         }
-        
+
         txn.commit();
+        file.close();
         return true;
+        
     } catch (const std::exception& e) {
         std::cerr << "Logs export failed: " << e.what() << std::endl;
         return false;
@@ -206,8 +212,6 @@ bool DataExportImportDAO::import_from_file(const std::string& file_path) {
 }
 
 bool DataExportImportDAO::import_users_from_csv(const std::string& file_path) {
-    // Реализация импорта пользователей из CSV
-    // Можно добавить позже при необходимости
     return false;
 }
 
@@ -217,7 +221,7 @@ bool DataExportImportDAO::create_backup(const std::string& backup_path) {
         std::string port = connection_->port();
         std::string dbname = connection_->dbname();
         std::string user = connection_->username();
-        std::string password = "password"; // В реальном приложении получать из конфигурации
+        std::string password = "password"; 
         
         std::string command = "pg_dump";
         command += " -h " + host;

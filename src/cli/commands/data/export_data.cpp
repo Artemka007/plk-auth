@@ -6,11 +6,29 @@
 bool ExportDataCommand::execute(const CommandArgs &args) {
     auto current_user = auth_service_->get_current_user();
     std::string file_path = "export.csv";
-    if (args.positional.size() > 0) {
-        file_path = args.positional[0];
+    
+    // Исправленный доступ к options
+    auto output_path_it = args.options.find("outputPath");
+    if (output_path_it != args.options.end()) {
+        file_path = output_path_it->second;  // Используем .second вместо *
     }
 
-    bool success = data_export_import_service_->export_data(file_path, current_user);
+    std::string type = "user";
+    auto type_it = args.options.find("type");
+    if (type_it != args.options.end()) {
+        type = type_it->second;  // Используем .second вместо *
+    }
+
+    bool success = false;
+
+    if (type == "user") {
+        success = data_export_import_service_->export_data(file_path, current_user);
+    } else if (type == "log") {
+        success = data_export_import_service_->export_logs_csv(file_path, current_user);
+    } else {
+        io_handler_->error("Invalid type. Use 'user' or 'log'");
+        return false;
+    }
     
     if (success) {
         io_handler_->println("✅ Data exported successfully to: " + file_path);
@@ -28,17 +46,27 @@ bool ExportDataCommand::is_visible() const {
 
 ValidationResult ExportDataCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() > 1) {
-        return {false, "Too many arguments. Usage: export [file_path]"};
+        return {false, "Too many arguments. Usage: export-data --type=user|log --outputPath=/path/to/save"};
     }
+    
+    // Дополнительная валидация опций
+    auto type_it = args.options.find("type");
+    if (type_it != args.options.end()) {
+        std::string type = type_it->second;
+        if (type != "user" && type != "log") {
+            return {false, "Invalid type. Use 'user' or 'log'"};
+        }
+    }
+    
     return {true, ""};
 }
 
 namespace {
 bool registered = []() {
     CommandRegistry::register_command(
-        "export-users", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
+        "export-data", [](auto app_state, auto io, auto auth, auto user, auto log, auto d) {
             return std::make_unique<ExportDataCommand>(
-                "export-users", "Export user data", "export-users [filepath?]", app_state, io, auth,
+                "export-data", "Export data", "export-data --type=user|log --outputPath=/path/to/save", app_state, io, auth,
                 user, log, d);
         });
     return true;
