@@ -1,22 +1,23 @@
 #pragma once
 
-#include "src/dao/user_dao.hpp"
 #include "src/dao/log_dao.hpp"
+#include "src/dao/user_dao.hpp"
+#include "src/models/enums.hpp"
 #include "src/models/system_log.hpp"
 #include "src/models/user.hpp"
-#include "src/models/enums.hpp"
+#include <chrono>
 #include <memory>
 #include <string>
 #include <vector>
-#include <chrono>
+#include <optional>
 
-namespace services
-{
+namespace services {
 class LogService {
 public:
     explicit LogService(std::shared_ptr<dao::LogDAO> log_dao);
 
-    void log(models::LogLevel level, models::ActionType action_type, const std::string &message,
+    void log(models::LogLevel level, models::ActionType action_type,
+             const std::string &message,
              const std::shared_ptr<const models::User> &actor = nullptr,
              const std::shared_ptr<const models::User> &subject = nullptr,
              const std::string &ip_address = "",
@@ -48,6 +49,16 @@ public:
                   const std::string &ip_address = "",
                   const std::string &user_agent = "");
 
+    std::vector<std::shared_ptr<models::SystemLog>> get_logs(
+        std::optional<models::LogLevel> level = std::nullopt,
+        std::optional<models::ActionType> action = std::nullopt,
+        std::optional<std::string> actor_id = std::nullopt,
+        std::optional<std::string> subject_id = std::nullopt,
+        std::optional<std::chrono::system_clock::time_point> start_time = std::nullopt,
+        std::optional<std::chrono::system_clock::time_point> end_time = std::nullopt,
+        size_t limit = 100);
+
+    // Logs Receive
     std::vector<std::shared_ptr<models::SystemLog>>
     get_recent_logs(size_t limit = 100);
 
@@ -68,20 +79,24 @@ public:
                            const std::string &end_date, size_t limit);
 
     bool cleanup_old_logs(int days_to_keep = 30);
-    bool delete_logs(const std::vector<std::shared_ptr<models::SystemLog>> &logs);
+    bool
+    delete_logs(const std::vector<std::shared_ptr<models::SystemLog>> &logs);
 
     size_t get_total_log_count();
+
+    std::chrono::system_clock::time_point sql_string_to_time_point(const std::string &sql_time) const;
+
+    std::optional<std::chrono::system_clock::time_point> parse_time(const std::string &sql_time) const;
 
 private:
     std::shared_ptr<dao::LogDAO> log_dao_;
 
-    std::shared_ptr<models::SystemLog> create_log_entry(
-        models::LogLevel level, models::ActionType action_type, const std::string &message,
-        const std::shared_ptr<const models::User> &actor,
-        const std::shared_ptr<const models::User> &subject,
-        const std::string &ip_address, const std::string &user_agent);
-
-    std::chrono::system_clock::time_point
-    sql_string_to_time_point(const std::string &sql_time) const;
+    std::shared_ptr<models::SystemLog>
+    create_log_entry(models::LogLevel level, models::ActionType action_type,
+                     const std::string &message,
+                     const std::shared_ptr<const models::User> &actor,
+                     const std::shared_ptr<const models::User> &subject,
+                     const std::string &ip_address,
+                     const std::string &user_agent);
 };
-};
+}; // namespace services
