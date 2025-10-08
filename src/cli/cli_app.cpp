@@ -5,14 +5,19 @@
 #include "src/services/auth_service.hpp"
 #include "src/services/log_service.hpp"
 #include "src/services/user_service.hpp"
+#include "src/services/data_export_import_service.hpp"
 
 CliApp::CliApp(std::shared_ptr<services::UserService> user_service,
                std::shared_ptr<services::AuthService> auth_service,
                std::shared_ptr<services::LogService> log_service,
+               std::shared_ptr<services::DataExportImportService>
+                   data_export_import_service,
                std::shared_ptr<IOHandler> io_handler)
     : user_service_(std::move(user_service)),
       auth_service_(std::move(auth_service)),
-      log_service_(std::move(log_service)), io_handler_(std::move(io_handler)),
+      log_service_(std::move(log_service)),
+      data_export_import_service_(std::move(data_export_import_service)),
+      io_handler_(std::move(io_handler)),
       app_state_(std::make_shared<AppState>()) {
     initialize_commands();
 }
