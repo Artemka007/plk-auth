@@ -1,10 +1,9 @@
 #include "help_command.hpp"
 #include "../command_registry.hpp"
 
-
 ValidationResult HelpCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() > 1) {
-        return {false, "Usage: help [command]"};
+        return {false, "Usage: " + get_usage()};
     }
     return {true, ""};
 }
@@ -14,7 +13,8 @@ bool HelpCommand::execute(const CommandArgs &args) {
         io_handler_->println("Available commands:");
         for (const auto &[name, cmd] : available_commands_) {
             if (cmd->is_visible()) {
-                io_handler_->println("  " + name + " - " + cmd->get_description());
+                io_handler_->println("  " + name + " - " +
+                                     cmd->get_description());
             }
         }
         return true;
@@ -28,6 +28,8 @@ bool HelpCommand::execute(const CommandArgs &args) {
     }
 
     io_handler_->println(target + ": " + it->second->get_description());
+    io_handler_->println("Usage: " + it->second->get_usage());
+    io_handler_->println();
     return true;
 }
 
@@ -44,8 +46,8 @@ bool registered = []() {
     CommandRegistry::register_command(
         "help", [](auto app_state, auto io, auto auth, auto user, auto log) {
             return std::make_unique<HelpCommand>(
-                "help", "Show help", app_state, io, auth, user, log
-            );
+                "help", "Show help", "help [command]", app_state, io, auth,
+                user, log);
         });
     return true;
 }();

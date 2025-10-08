@@ -12,7 +12,7 @@ ValidationResult ViewLogsCommand::validate_args(const CommandArgs &args) const {
 
     if (args.positional.size() > 1) {
         result.valid = false;
-        result.error_message = "Usage: view-logs [limit]";
+        result.error_message = "Usage: " + get_usage();
     } else if (!args.positional.empty()) {
         try {
             int parsed = std::stoi(args.positional[0]);
@@ -65,8 +65,8 @@ bool registered = []() {
         "view-logs",
         [](auto app_state, auto io, auto auth, auto user, auto log) {
             return std::make_unique<ViewLogsCommand>(
-                "view-logs", "Show recent system logs", app_state, io, auth,
-                user, log);
+                "view-logs", "Show recent system logs", "view-logs [limit]",
+                app_state, io, auth, user, log);
         });
     return true;
 }();

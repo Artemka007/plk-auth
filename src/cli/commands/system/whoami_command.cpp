@@ -1,10 +1,11 @@
 #include "whoami_command.hpp"
-#include "src/models/user.hpp"
 #include "../command_registry.hpp"
+#include "src/models/user.hpp"
 
 ValidationResult WhoAmICommand::validate_args(const CommandArgs &args) const {
-    if (!args.positional.empty() || !args.flags.empty() || !args.options.empty()) {
-        return {false, "Usage: whoami (no arguments)"};
+    if (!args.positional.empty() || !args.flags.empty() ||
+        !args.options.empty()) {
+        return {false, "Usage: " + get_usage()};
     }
     return {true, ""};
 }
@@ -34,10 +35,8 @@ bool registered = []() {
         [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
             return std::make_unique<WhoAmICommand>(
                 "whoami", "Print short information about yourself",
-                app_state, io, auth, user_svc, log
-            );
-        }
-    );
+                "whoami (no arguments)", app_state, io, auth, user_svc, log);
+        });
     return true;
 }();
 } // namespace

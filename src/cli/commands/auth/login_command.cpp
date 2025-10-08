@@ -1,10 +1,10 @@
 #include "login_command.hpp"
-#include "src/services/auth_service.hpp"
 #include "../command_registry.hpp"
+#include "src/services/auth_service.hpp"
 
 ValidationResult LoginCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() != 1) {
-        return {false, "Usage: login [email]"};
+        return {false, "Usage: " + get_usage()};
     }
     return {true, ""};
 }
@@ -13,7 +13,8 @@ bool LoginCommand::execute(const CommandArgs &args) {
     const std::string &email = args.positional[0];
 
     // Secure password input
-    std::string password = io_handler_->read_password("Enter password for " + email + ": ");
+    std::string password =
+        io_handler_->read_password("Enter password for " + email + ": ");
 
     services::LoginResult result = auth_service_->login(email, password);
     if (!result.success) {
@@ -32,8 +33,10 @@ bool LoginCommand::execute(const CommandArgs &args) {
         io_handler_->println("You must change your password now.");
         bool changed = false;
         while (!changed) {
-            std::string new_password = io_handler_->read_password("New password: ");
-            std::string confirm_password = io_handler_->read_password("Confirm password: ");
+            std::string new_password =
+                io_handler_->read_password("New password: ");
+            std::string confirm_password =
+                io_handler_->read_password("Confirm password: ");
 
             if (new_password != confirm_password) {
                 io_handler_->error("Passwords do not match. Try again.");
@@ -62,8 +65,9 @@ bool registered = []() {
     CommandRegistry::register_command(
         "login", [](auto app_state, auto io, auto auth, auto user, auto log) {
             return std::make_unique<LoginCommand>(
-                "login", "Login with your email", app_state, io, auth, user, log);
+                "login", "Login with your email", "login <email>", app_state,
+                io, auth, user, log);
         });
     return true;
 }();
-}
+} // namespace

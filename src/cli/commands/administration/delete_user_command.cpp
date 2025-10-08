@@ -5,7 +5,7 @@
 ValidationResult
 DeleteUserCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() != 1) {
-        return {false, "Usage: delete-user <email>"};
+        return {false, "Usage: " + get_usage()};
     }
     return {true, ""};
 }
@@ -58,8 +58,8 @@ bool registered = []() {
         "delete-user",
         [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
             return std::make_unique<DeleteUserCommand>(
-                "delete-user", "Delete an existing user", app_state, io, auth,
-                user_svc, log);
+                "delete-user", "Delete an existing user", "delete-user <email>",
+                app_state, io, auth, user_svc, log);
         });
     return true;
 }();

@@ -6,7 +6,7 @@
 ValidationResult
 CreateUserCommand::validate_args(const CommandArgs &args) const {
     if (args.positional.size() != 3) {
-        return {false, "Usage: create-user <email> <first_name> <last_name>"};
+        return {false, "Usage: " + get_usage()};
     }
     return {true, ""};
 }
@@ -46,8 +46,9 @@ bool registered = []() {
         "create-user",
         [](auto app_state, auto io, auto auth, auto user_svc, auto log) {
             return std::make_unique<CreateUserCommand>(
-                "create-user", "Create a new user", app_state, io, auth,
-                user_svc, log);
+                "create-user", "Create a new user",
+                "create-user <email> <first_name> <last_name>",
+                app_state, io, auth, user_svc, log);
         });
     return true;
 }();
