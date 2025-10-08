@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/cli/io_handler.hpp"
 #include "src/cli/app_state.hpp"
+#include "src/cli/io_handler.hpp"
 #include "src/services/auth_service.hpp"
 #include "src/services/log_service.hpp"
 #include "src/services/user_service.hpp"
@@ -12,14 +12,15 @@
 
 class BaseCommand {
 public:
-    BaseCommand(std::string name, std::string description,
+    BaseCommand(std::string name, std::string description, std::string usage,
                 std::shared_ptr<AppState> app_state,
                 std::shared_ptr<IOHandler> io_handler,
                 std::shared_ptr<services::AuthService> auth_service,
                 std::shared_ptr<services::UserService> user_service,
                 std::shared_ptr<services::LogService> log_service)
         : name_(std::move(name)), description_(std::move(description)),
-          app_state_(std::move(app_state)), io_handler_(std::move(io_handler)),
+          usage_(std::move(usage)), app_state_(std::move(app_state)),
+          io_handler_(std::move(io_handler)),
           auth_service_(std::move(auth_service)),
           user_service_(std::move(user_service)),
           log_service_(std::move(log_service)) {}
@@ -34,6 +35,7 @@ public:
 
     std::string get_name() const { return name_; }
     std::string get_description() const { return description_; }
+    std::string get_usage() const { return usage_; }
 
 protected:
     const std::shared_ptr<AppState> app_state_;
@@ -45,4 +47,5 @@ protected:
 private:
     const std::string name_;
     const std::string description_;
+    const std::string usage_;
 };
