@@ -5,10 +5,12 @@
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <fstream>
 #include <functional>
 #include <filesystem>
 #include "../dao/log_dao.hpp"
 #include "../dao/user_dao.hpp"
+#include "../dao/access_permission_dao.hpp"
 
 namespace db {
 
@@ -327,6 +329,105 @@ std::string Database::get_connection_info() const {
     return info.str();
 }
 
+bool Database::export_to_file(const std::string& file_path) {
+    try {
+        pqxx::work txn(*connection_);
+        
+        // Экспорт структуры и данных
+        std::string export_sql = 
+            "COPY (" 
+            "SELECT '-- Users table data' AS comment UNION ALL "
+            "SELECT 'INSERT INTO app_user (id, first_name, last_name, email, password_hash, is_active, password_change_required, created_at) VALUES (' || "
+            "'''' || id || ''', ' || "
+            "'''' || REPLACE(first_name, '''', '''''') || ''', ' || "
+            "'''' || REPLACE(last_name, '''', '''''') || ''', ' || "
+            "'''' || email || ''', ' || "
+            "'''' || password_hash || ''', ' || "
+            "is_active || ', ' || "
+            "password_change_required || ', ' || "
+            "'''' || created_at || ''');' "
+            "FROM app_user"
+            ") TO STDOUT";
+        
+        // Здесь можно добавить экспорт других таблиц
+        
+        std::ofstream file(file_path);
+        auto result = txn.exec(export_sql);
+        for (const auto& row : result) {
+            file << row[0].as<std::string>() << "\n";
+        }
+        
+        txn.commit();
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Export failed: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Database::import_from_file(const std::string& file_path) {
+    try {
+        std::ifstream file(file_path);
+        if (!file.is_open()) {
+            return false;
+        }
+        
+        pqxx::work txn(*connection_);
+        std::string line;
+        
+        while (std::getline(file, line)) {
+            if (!line.empty() && line.find("INSERT INTO") != std::string::npos) {
+                txn.exec(line);
+            }
+        }
+        
+        txn.commit();
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Import failed: " << e.what() << std::endl;
+        return false;
+    }
+}
+
+bool Database::export_logs_to_csv(const std::string& file_path, const dao::LogFilter& filter) {
+    try {
+        pqxx::work txn(*connection_);
+        
+        std::string where_clause = "";
+        // Здесь можно добавить фильтрацию по уровню, дате и т.д.
+        
+        std::string export_sql = 
+            "COPY (" 
+            "SELECT level, action_type, message, timestamp, actor_id, subject_id, ip_address, user_agent "
+            "FROM system_log" + where_clause + " "
+            "ORDER BY timestamp DESC"
+            ") TO STDOUT WITH CSV HEADER";
+        
+        std::ofstream file(file_path);
+        auto result = txn.exec(export_sql);
+        
+        // Заголовок CSV
+        file << "level,action_type,message,timestamp,actor_id,subject_id,ip_address,user_agent\n";
+        
+        for (const auto& row : result) {
+            file << row["level"].as<std::string>() << ","
+                 << row["action_type"].as<std::string>() << ","
+                 << "\"" << row["message"].as<std::string>() << "\","
+                 << row["timestamp"].as<std::string>() << ","
+                 << (row["actor_id"].is_null() ? "" : row["actor_id"].as<std::string>()) << ","
+                 << (row["subject_id"].is_null() ? "" : row["subject_id"].as<std::string>()) << ","
+                 << (row["ip_address"].is_null() ? "" : row["ip_address"].as<std::string>()) << ","
+                 << (row["user_agent"].is_null() ? "" : row["user_agent"].as<std::string>()) << "\n";
+        }
+        
+        txn.commit();
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Logs export failed: " << e.what() << std::endl;
+        return false;
+    }
+}
+
 // Реализация DAOFactory
 DAOFactory::DAOFactory(std::shared_ptr<Database> db) : database_(std::move(db)) {}
 
@@ -344,5 +445,12 @@ std::shared_ptr<dao::LogDAO> DAOFactory::create_log_dao() {
     }
     // Включаем заголовочный файл UserDAO перед использованием
     return std::shared_ptr<dao::LogDAO>(new dao::LogDAO(database_->get_connection()));
+}
+
+std::shared_ptr<dao::AccessPermissionDAO> DAOFactory::create_permission_dao() {
+    if (!database_ || !database_->get_connection()) {
+        throw std::runtime_error("Database connection is not available");
+    }
+    return std::shared_ptr<dao::AccessPermissionDAO>(new dao::AccessPermissionDAO(database_->get_connection()));
 }
 } // namespace db

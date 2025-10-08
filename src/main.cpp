@@ -38,12 +38,15 @@ std::shared_ptr<CliApp> create_cli_app() {
         auto dao_factory = db::DAOFactory(db);
         auto user_dao = dao_factory.create_user_dao();
         auto log_dao = dao_factory.create_log_dao();
+        auto permission_dao = dao_factory.create_permission_dao(); // ← Новый DAO
         
         // 5. Создаем сервисы
-        auto user_service = std::make_shared<services::UserService>(user_dao);
+        auto user_service = std::make_shared<services::UserService>(user_dao, permission_dao);
         auto auth_service = std::make_shared<services::AuthService>(user_dao);
         auto log_service = std::make_shared<services::LogService>(log_dao);
         
+        user_service->initialize_system();
+
         // 6. Создаем CLI компоненты
         auto io_handler = std::make_shared<StandardIOHandler>();
         
